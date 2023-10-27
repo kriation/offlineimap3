@@ -24,17 +24,17 @@ from offlineimap.ui import getglobalui
 # Globals
 
 # Message headers that use space as the separator (for label storage)
-SPACE_SEPARATED_LABEL_HEADERS = ('X-Label', 'Keywords')
+SPACE_SEPARATED_LABEL_HEADERS = ("X-Label", "Keywords")
 
 # Find the modified UTF-7 shifts of an international mailbox name.
-MUTF7_SHIFT_RE = re.compile(r'&[^-]*-|\+')
+MUTF7_SHIFT_RE = re.compile(r"&[^-]*-|\+")
 
 
 def __debug(*args):
     msg = []
     for arg in args:
         msg.append(str(arg))
-    getglobalui().debug('imap', " ".join(msg))
+    getglobalui().debug("imap", " ".join(msg))
 
 
 def dequote(s):
@@ -46,7 +46,7 @@ def dequote(s):
     if s and s.startswith('"') and s.endswith('"'):
         s = s[1:-1]  # Strip off the surrounding quotes.
         s = s.replace('\\"', '"')
-        s = s.replace('\\\\', '\\')
+        s = s.replace("\\\\", "\\")
     return s
 
 
@@ -57,7 +57,7 @@ def quote(s):
     parenthised lists to be quoted."""
 
     s = s.replace('"', '\\"')
-    s = s.replace('\\', '\\\\')
+    s = s.replace("\\", "\\\\")
     return '"%s"' % s
 
 
@@ -69,7 +69,7 @@ def flagsplit(s):
         ['FLAGS,'(\\Seen Old)','UID', '4807']
     """
 
-    if s[0] != '(' or s[-1] != ')':
+    if s[0] != "(" or s[-1] != ")":
         raise ValueError("Passed s '%s' is not a flag list" % s)
     return imapsplit(s[1:-1])
 
@@ -109,19 +109,19 @@ def imapsplit(imapstring):
     ['(\\HasNoChildren)', '"."', '"INBOX.Sent"']"""
 
     if not isinstance(imapstring, str):
-        imapstring = imapstring.decode('utf-8')
+        imapstring = imapstring.decode("utf-8")
 
     workstr = imapstring.strip()
     retval = []
     while len(workstr):
         # handle parenthized fragments (...()...)
-        if workstr[0] == '(':
+        if workstr[0] == "(":
             rparenc = 1  # count of right parenthesis to match
             rpareni = 1  # position to examine
             while rparenc:  # Find the end of the group.
-                if workstr[rpareni] == ')':  # end of a group
+                if workstr[rpareni] == ")":  # end of a group
                     rparenc -= 1
-                elif workstr[rpareni] == '(':  # start of a group
+                elif workstr[rpareni] == "(":  # start of a group
                     rparenc += 1
                 rpareni += 1  # Move to next character.
             parenlist = workstr[0:rpareni]
@@ -152,11 +152,13 @@ def imapsplit(imapstring):
     return retval
 
 
-flagmap = [('\\Seen', 'S'),
-           ('\\Answered', 'R'),
-           ('\\Flagged', 'F'),
-           ('\\Deleted', 'T'),
-           ('\\Draft', 'D')]
+flagmap = [
+    ("\\Seen", "S"),
+    ("\\Answered", "R"),
+    ("\\Flagged", "F"),
+    ("\\Deleted", "T"),
+    ("\\Draft", "D"),
+]
 
 
 def flagsimap2maildir(flagstring):
@@ -186,7 +188,7 @@ def flagsmaildir2imap(maildirflaglist):
     for imapflag, maildirflag in flagmap:
         if maildirflag in maildirflaglist:
             retval.append(imapflag)
-    return '(' + ' '.join(sorted(retval)) + ')'
+    return "(" + " ".join(sorted(retval)) + ")"
 
 
 def uid_sequence(uidlist):
@@ -202,7 +204,7 @@ def uid_sequence(uidlist):
         return "%s:%s" % (start, end)
 
     if not len(uidlist):
-        return ''  # Empty list, return
+        return ""  # Empty list, return
 
     start, end = None, None
     retval = []
@@ -237,7 +239,7 @@ def __split_quoted(s):
     """
 
     if len(s) == 0:
-        return '', ''
+        return "", ""
 
     q = quoted = s[0]
     rest = s[1:]
@@ -251,11 +253,11 @@ def __split_quoted(s):
         # continue our search.
         is_escaped = False
         i = next_q - 1
-        while i >= 0 and rest[i] == '\\':
+        while i >= 0 and rest[i] == "\\":
             i -= 1
             is_escaped = not is_escaped
-        quoted += rest[0:next_q + 1]
-        rest = rest[next_q + 1:]
+        quoted += rest[0 : next_q + 1]
+        rest = rest[next_q + 1 :]
         if not is_escaped:
             return quoted, rest.lstrip()
 
@@ -271,9 +273,9 @@ def format_labels_string(header, labels):
     if logics here gets changed."""
 
     if header in SPACE_SEPARATED_LABEL_HEADERS:
-        sep = ' '
+        sep = " "
     else:
-        sep = ','
+        sep = ","
 
     return sep.join(labels)
 
@@ -292,9 +294,9 @@ def parse_labels_string(header, labels_str):
     """
 
     if header in SPACE_SEPARATED_LABEL_HEADERS:
-        sep = ' '
+        sep = " "
     else:
-        sep = ','
+        sep = ","
 
     labels = labels_str.strip().split(sep)
 
@@ -334,14 +336,14 @@ def decode_mailbox_name(name):
 
     def demodify(m):
         s = m.group()
-        if s == '+':
-            return '+-'
-        return '+' + s[1:-1].replace(',', '/') + '-'
+        if s == "+":
+            return "+-"
+        return "+" + s[1:-1].replace(",", "/") + "-"
 
     ret = MUTF7_SHIFT_RE.sub(demodify, name)
 
     try:
-        return ret.decode('utf-7').encode('utf-8')
+        return ret.decode("utf-7").encode("utf-8")
     except (UnicodeDecodeError, UnicodeEncodeError):
         return name
 
@@ -351,31 +353,26 @@ def decode_mailbox_name(name):
 
 # Public API, to be used in repository definitions
 
+
 def IMAP_utf8(foldername):
     """Convert IMAP4_utf_7 encoded string to utf-8"""
-    return codecs.decode(
-        foldername.encode(),
-        'imap4-utf-7'
-    ).encode('utf-8').decode()
+    return codecs.decode(foldername.encode(), "imap4-utf-7").encode("utf-8").decode()
 
 
 def utf8_IMAP(foldername):
     """Convert utf-8 encoded string to IMAP4_utf_7"""
-    return codecs.decode(
-        foldername.encode(),
-        'utf-8'
-    ).encode('imap4-utf-7').decode()
+    return codecs.decode(foldername.encode(), "utf-8").encode("imap4-utf-7").decode()
 
 
 # Codec definition
 def modified_base64(s):
-    s = s.encode('utf-16be')
-    return binascii.b2a_base64(s).rstrip(b'\n=').replace(b'/', b',')
+    s = s.encode("utf-16be")
+    return binascii.b2a_base64(s).rstrip(b"\n=").replace(b"/", b",")
 
 
 def doB64(_in, r):
     if _in:
-        r.append(b'&%s-' % modified_base64(''.join(_in)))
+        r.append(b"&%s-" % modified_base64("".join(_in)))
         del _in[:]
 
 
@@ -384,33 +381,33 @@ def utf7m_encode(text: str) -> Tuple[bytes, int]:
     _in = []
 
     for c in text:
-        if 0x20 <= ord(c) <= 0x7e:
+        if 0x20 <= ord(c) <= 0x7E:
             doB64(_in, r)
-            r.append(b'&-' if c == '&' else c.encode())
+            r.append(b"&-" if c == "&" else c.encode())
         else:
             _in.append(c)
 
     doB64(_in, r)
-    return b''.join(r), len(text)
+    return b"".join(r), len(text)
 
 
 # decoding
 def modified_unbase64(s):
-    b = binascii.a2b_base64(s.replace(',', '/') + '===')
-    return str(b, 'utf-16be')
+    b = binascii.a2b_base64(s.replace(",", "/") + "===")
+    return str(b, "utf-16be")
 
 
 def utf7m_decode(binary: bytes) -> Tuple[str, int]:
     r = []
     decode = []
     for c in binary:
-        if c == ord('&') and not decode:
-            decode.append('&')
-        elif c == ord('-') and decode:
+        if c == ord("&") and not decode:
+            decode.append("&")
+        elif c == ord("-") and decode:
             if len(decode) == 1:
-                r.append('&')
+                r.append("&")
             else:
-                r.append(modified_unbase64(''.join(decode[1:])))
+                r.append(modified_unbase64("".join(decode[1:])))
             decode = []
         elif decode:
             decode.append(chr(c))
@@ -418,28 +415,24 @@ def utf7m_decode(binary: bytes) -> Tuple[str, int]:
             r.append(chr(c))
 
     if decode:
-        r.append(modified_unbase64(''.join(decode[1:])))
+        r.append(modified_unbase64("".join(decode[1:])))
 
-    return ''.join(r), len(binary)
+    return "".join(r), len(binary)
 
 
 class StreamReader(codecs.StreamReader):
-    def decode(self, s, errors='strict'):
+    def decode(self, s, errors="strict"):
         return utf7m_decode(s)
 
 
 class StreamWriter(codecs.StreamWriter):
-    def decode(self, s, errors='strict'):
+    def decode(self, s, errors="strict"):
         return utf7m_encode(s)
 
 
 def utf7m_search_function(name):
     return codecs.CodecInfo(
-        utf7m_encode,
-        utf7m_decode,
-        StreamReader,
-        StreamWriter,
-        name='imap4-utf-7'
+        utf7m_encode, utf7m_decode, StreamReader, StreamWriter, name="imap4-utf-7"
     )
 
 
@@ -458,7 +451,7 @@ def foldername_to_imapname(folder_name):
 
     """
     # If name includes some of these characters, quote it
-    atom_specials = [' ', '/', '(', ')', '{', '}']
+    atom_specials = [" ", "/", "(", ")", "{", "}"]
 
     if any((c in atom_specials) for c in folder_name):
         folder_name = '"' + folder_name + '"'

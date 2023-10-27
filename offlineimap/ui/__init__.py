@@ -18,15 +18,18 @@
 from offlineimap.ui.UIBase import getglobalui, setglobalui
 from offlineimap.ui import TTY, Noninteractive, Machine
 
-UI_LIST = {'ttyui': TTY.TTYUI,
-           'basic': Noninteractive.Basic,
-           'quiet': Noninteractive.Quiet,
-           'syslog': Noninteractive.Syslog,
-           'machineui': Machine.MachineUI}
+UI_LIST = {
+    "ttyui": TTY.TTYUI,
+    "basic": Noninteractive.Basic,
+    "quiet": Noninteractive.Quiet,
+    "syslog": Noninteractive.Syslog,
+    "machineui": Machine.MachineUI,
+}
 
 # add Blinkenlights UI if it imports correctly (curses installed)
 try:
     from offlineimap.ui import Curses
-    UI_LIST['blinkenlights'] = Curses.Blinkenlights
+
+    UI_LIST["blinkenlights"] = Curses.Blinkenlights
 except ImportError:
     pass

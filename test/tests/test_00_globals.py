@@ -13,7 +13,6 @@ class Opt:
 
 
 class TestOfflineimapGlobals(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         cls.o = Opt()
@@ -21,8 +20,7 @@ class TestOfflineimapGlobals(unittest.TestCase):
 
     def test_initial_state(self):
         for k in self.o.__dict__.keys():
-            self.assertTrue(getattr(self.o, k) ==
-                            getattr(globals.options, k))
+            self.assertTrue(getattr(self.o, k) == getattr(globals.options, k))
 
     def test_object_changes(self):
         self.o.one = "one"

@@ -37,6 +37,7 @@ class BaseFolder:
     """
     Base Folder Class
     """
+
     __hash__ = None
 
     def __init__(self, name, repository):
@@ -50,14 +51,18 @@ class BaseFolder:
         # Use the built-in email libraries
         # Establish some policies
         self.policy = {
-          '7bit':
-          policy.default.clone(cte_type='7bit', utf8=False, refold_source='none'),
-          '7bit-RFC':
-          policy.default.clone(cte_type='7bit', utf8=False, refold_source='none', linesep='\r\n'),
-          '8bit':
-          policy.default.clone(cte_type='8bit', utf8=True, refold_source='none'),
-          '8bit-RFC':
-          policy.default.clone(cte_type='8bit', utf8=True, refold_source='none', linesep='\r\n'),
+            "7bit": policy.default.clone(
+                cte_type="7bit", utf8=False, refold_source="none"
+            ),
+            "7bit-RFC": policy.default.clone(
+                cte_type="7bit", utf8=False, refold_source="none", linesep="\r\n"
+            ),
+            "8bit": policy.default.clone(
+                cte_type="8bit", utf8=True, refold_source="none"
+            ),
+            "8bit-RFC": policy.default.clone(
+                cte_type="8bit", utf8=True, refold_source="none", linesep="\r\n"
+            ),
         }
         # Parsers
         self.parser = {}
@@ -67,10 +72,10 @@ class BaseFolder:
         self.ffilter_name = name
         # Top level dir name is always ''.
         self.root = None
-        self.name = name if not name == self.getsep() else ''
+        self.name = name if not name == self.getsep() else ""
         self.newmail_hook = None
         # Only set the newmail_hook if the IMAP folder is named 'INBOX'.
-        if self.name == 'INBOX':
+        if self.name == "INBOX":
             self.newmail_hook = repository.newmail_hook
         self.have_newmail = False
         self.copy_ignoreUIDs = None  # List of UIDs to ignore.
@@ -80,7 +85,7 @@ class BaseFolder:
         # '' as that is the name that e.g. the Maildir scanning will
         # return for the top-level dir.
         if self.visiblename == self.getsep():
-            self.visiblename = ''
+            self.visiblename = ""
 
         self.repoconfname = "Repository " + repository.name
 
@@ -88,27 +93,37 @@ class BaseFolder:
 
         # Do we need to use mail timestamp for filename prefix?
         filename_use_mail_timestamp_global = self.config.getdefaultboolean(
-            "general", "filename_use_mail_timestamp", False)
+            "general", "filename_use_mail_timestamp", False
+        )
         self._filename_use_mail_timestamp = self.config.getdefaultboolean(
             self.repoconfname,
             "filename_use_mail_timestamp",
-            filename_use_mail_timestamp_global)
+            filename_use_mail_timestamp_global,
+        )
 
         self._sync_deletes = self.config.getdefaultboolean(
-            self.repoconfname, "sync_deletes", True)
+            self.repoconfname, "sync_deletes", True
+        )
         self._dofsync = self.config.getdefaultboolean("general", "fsync", True)
 
         # Determine if we're running static or dynamic folder filtering
         # and check filtering status.
         self._dynamic_folderfilter = self.config.getdefaultboolean(
-            self.repoconfname, "dynamic_folderfilter", False)
+            self.repoconfname, "dynamic_folderfilter", False
+        )
         self._sync_this = repository.should_sync_folder(self.ffilter_name)
         if self._dynamic_folderfilter:
-            self.ui.debug('', "Running dynamic folder filtering on '%s'[%s]" %
-                          (self.ffilter_name, repository))
+            self.ui.debug(
+                "",
+                "Running dynamic folder filtering on '%s'[%s]"
+                % (self.ffilter_name, repository),
+            )
         elif not self._sync_this:
-            self.ui.debug('', "Filtering out '%s'[%s] due to folderfilter" %
-                          (self.ffilter_name, repository))
+            self.ui.debug(
+                "",
+                "Filtering out '%s'[%s] due to folderfilter"
+                % (self.ffilter_name, repository),
+            )
 
         # Passes for syncmessagesto.
         self.syncmessagesto_passes = [
@@ -128,7 +143,7 @@ class BaseFolder:
     def __unicode__(self):
         # NOTE(sheeprine): Implicit call to this by UIBase deletingflags() which
         # fails if the str is utf-8
-        return self.name.decode('utf-8')
+        return self.name.decode("utf-8")
 
     def __enter__(self):
         """Starts a transaction. This will postpone (guaranteed) saving to disk
@@ -178,7 +193,7 @@ class BaseFolder:
         raise NotImplementedError
 
     def quickchanged(self, statusfolder):
-        """ Runs quick check for folder changes and returns changed
+        """Runs quick check for folder changes and returns changed
         status: True -- changed, False -- not changed.
 
         :param statusfolder: keeps track of the last known folder state.
@@ -244,12 +259,12 @@ class BaseFolder:
         """Return base file name of file to store Status/UID info in."""
 
         if not self.name:
-            basename = '.'
+            basename = "."
         else:  # Avoid directory hierarchies and file names such as '/'.
-            basename = self.name.replace('/', '.')
+            basename = self.name.replace("/", ".")
         # Replace with literal 'dot' if final path name is '.' as '.' is
         # an invalid file name.
-        basename = re.sub('(^|\/)\.$', '\\1dot', basename)
+        basename = re.sub("(^|\/)\.$", "\\1dot", basename)
         return basename
 
     def check_uidvalidity(self):
@@ -271,8 +286,7 @@ class BaseFolder:
     def _getuidfilename(self):
         """provides UIDVALIDITY cache filename for class internal purposes."""
 
-        return os.path.join(self.repository.getuiddir(),
-                            self.getfolderbasename())
+        return os.path.join(self.repository.getuiddir(), self.getfolderbasename())
 
     def get_saveduidvalidity(self):
         """Return the previously cached UIDVALIDITY value
@@ -280,7 +294,7 @@ class BaseFolder:
         :returns: UIDVALIDITY as (long) number or None, if None had been
             saved yet."""
 
-        if hasattr(self, '_base_saved_uidvalidity'):
+        if hasattr(self, "_base_saved_uidvalidity"):
             return self._base_saved_uidvalidity
         uidfilename = self._getuidfilename()
         if not os.path.exists(uidfilename):
@@ -388,16 +402,18 @@ class BaseFolder:
         maxage is allowed to be either an integer or a date of the form
         YYYY-mm-dd. This returns a time_struct."""
 
-        maxagestr = self.config.getdefault("Account %s" %
-                                           self.accountname, "maxage", None)
+        maxagestr = self.config.getdefault(
+            "Account %s" % self.accountname, "maxage", None
+        )
         if maxagestr is None:
             return None
         # Is it a number?
         try:
             maxage = int(maxagestr)
             if maxage < 1:
-                raise OfflineImapError("invalid maxage value %d" % maxage,
-                                       OfflineImapError.ERROR.MESSAGE)
+                raise OfflineImapError(
+                    "invalid maxage value %d" % maxage, OfflineImapError.ERROR.MESSAGE
+                )
             return time.gmtime(time.time() - 60 * 60 * 24 * maxage)
         except ValueError:
             pass  # Maybe it was a date.
@@ -405,17 +421,20 @@ class BaseFolder:
         try:
             date = time.strptime(maxagestr, "%Y-%m-%d")
             if date[0] < 1900:
-                raise OfflineImapError("maxage led to year %d. "
-                                       "Abort syncing." % date[0],
-                                       OfflineImapError.ERROR.MESSAGE)
+                raise OfflineImapError(
+                    "maxage led to year %d. " "Abort syncing." % date[0],
+                    OfflineImapError.ERROR.MESSAGE,
+                )
             if (time.mktime(date) - time.mktime(time.localtime())) > 0:
-                raise OfflineImapError("maxage led to future date %s. "
-                                       "Abort syncing." % maxagestr,
-                                       OfflineImapError.ERROR.MESSAGE)
+                raise OfflineImapError(
+                    "maxage led to future date %s. " "Abort syncing." % maxagestr,
+                    OfflineImapError.ERROR.MESSAGE,
+                )
             return date
         except ValueError:
-            raise OfflineImapError("invalid maxage value %s" % maxagestr,
-                                   OfflineImapError.ERROR.MESSAGE)
+            raise OfflineImapError(
+                "invalid maxage value %s" % maxagestr, OfflineImapError.ERROR.MESSAGE
+            )
 
     def getmaxsize(self):
         """
@@ -424,29 +443,34 @@ class BaseFolder:
         Returns: A string with the maxise of the account name
 
         """
-        return self.config.getdefaultint("Account %s" %
-                                         self.accountname, "maxsize", None)
+        return self.config.getdefaultint(
+            "Account %s" % self.accountname, "maxsize", None
+        )
 
     def getstartdate(self):
-        """ Retrieve the value of the configuration option startdate """
-        datestr = self.config.getdefault("Repository " + self.repository.name,
-                                         'startdate', None)
+        """Retrieve the value of the configuration option startdate"""
+        datestr = self.config.getdefault(
+            "Repository " + self.repository.name, "startdate", None
+        )
         try:
             if not datestr:
                 return None
             date = time.strptime(datestr, "%Y-%m-%d")
             if date[0] < 1900:
-                raise OfflineImapError("startdate led to year %d. "
-                                       "Abort syncing." % date[0],
-                                       OfflineImapError.ERROR.MESSAGE)
+                raise OfflineImapError(
+                    "startdate led to year %d. " "Abort syncing." % date[0],
+                    OfflineImapError.ERROR.MESSAGE,
+                )
             if (time.mktime(date) - time.mktime(time.localtime())) > 0:
-                raise OfflineImapError("startdate led to future date %s. "
-                                       "Abort syncing." % datestr,
-                                       OfflineImapError.ERROR.MESSAGE)
+                raise OfflineImapError(
+                    "startdate led to future date %s. " "Abort syncing." % datestr,
+                    OfflineImapError.ERROR.MESSAGE,
+                )
             return date
         except ValueError:
-            raise OfflineImapError("invalid startdate value %s",
-                                   OfflineImapError.ERROR.MESSAGE)
+            raise OfflineImapError(
+                "invalid startdate value %s", OfflineImapError.ERROR.MESSAGE
+            )
 
     def get_min_uid_file(self):
         """
@@ -455,9 +479,11 @@ class BaseFolder:
         Returns: Min UID file name.
 
         """
-        startuiddir = os.path.join(self.config.getmetadatadir(),
-                                   'Repository-' + self.repository.name,
-                                   'StartUID')
+        startuiddir = os.path.join(
+            self.config.getmetadatadir(),
+            "Repository-" + self.repository.name,
+            "StartUID",
+        )
         if not os.path.exists(startuiddir):
             os.mkdir(startuiddir, 0o700)
         return os.path.join(startuiddir, self.getfolderbasename())
@@ -473,7 +499,7 @@ class BaseFolder:
 
         """
         uidfile = self.get_min_uid_file()
-        fd = open(uidfile, 'wt')
+        fd = open(uidfile, "wt")
         fd.write(str(min_uid) + "\n")
         fd.close()
 
@@ -488,7 +514,7 @@ class BaseFolder:
         if not os.path.exists(uidfile):
             return None
         try:
-            fd = open(uidfile, 'rt')
+            fd = open(uidfile, "rt")
             min_uid = int(fd.readline().strip())
             fd.close()
             return min_uid
@@ -678,8 +704,9 @@ class BaseFolder:
 
         """
 
-        self.ui.debug('', 'addmessageheader: called to add %s: %s' %
-                      (headername, headervalue))
+        self.ui.debug(
+            "", "addmessageheader: called to add %s: %s" % (headername, headervalue)
+        )
 
         msg.add_header(headername, headervalue)
         return
@@ -696,7 +723,7 @@ class BaseFolder:
         Returns: header value or None if no such header was found.
         """
 
-        self.ui.debug('', 'getmessageheader: called to get %s' % headername)
+        self.ui.debug("", "getmessageheader: called to get %s" % headername)
         return msg.get(headername)
 
     def getmessageheaderlist(self, msg, headername):
@@ -712,7 +739,7 @@ class BaseFolder:
         found.
         """
 
-        self.ui.debug('', 'getmessageheaderlist: called to get %s' % headername)
+        self.ui.debug("", "getmessageheaderlist: called to get %s" % headername)
         return msg.get_all(headername, [])
 
     def deletemessageheaders(self, msg, header_list):
@@ -726,8 +753,7 @@ class BaseFolder:
 
         if type(header_list) != type([]):
             header_list = [header_list]
-        self.ui.debug('',
-                      'deletemessageheaders: called to delete %s' % header_list)
+        self.ui.debug("", "deletemessageheaders: called to delete %s" % header_list)
 
         for h in header_list:
             del msg[h]
@@ -740,7 +766,7 @@ class BaseFolder:
 
         Arguments:
         - msg: message object
-        - header: header to extract the date from 
+        - header: header to extract the date from
 
         Returns: timestamp or `None` in the case of failure.
         """
@@ -822,7 +848,7 @@ class BaseFolder:
                 # Save uploaded status in the statusfolder.
                 statusfolder.savemessage(new_uid, message, flags, rtime)
                 # Check whether the mail has been seen.
-                if 'S' not in flags:
+                if "S" not in flags:
                     self.have_newmail = True
             elif new_uid == 0:
                 # Message was stored to dstfolder, but we can't find it's UID
@@ -833,9 +859,11 @@ class BaseFolder:
                 # IMAP servers ...
                 self.deletemessage(uid)
             else:
-                msg = "Trying to save msg (uid %d) on folder " \
-                      "%s returned invalid uid %d" % \
-                      (uid, dstfolder.getvisiblename(), new_uid)
+                msg = (
+                    "Trying to save msg (uid %d) on folder "
+                    "%s returned invalid uid %d"
+                    % (uid, dstfolder.getvisiblename(), new_uid)
+                )
                 raise OfflineImapError(msg, OfflineImapError.ERROR.MESSAGE)
         except KeyboardInterrupt:  # Bubble up CTRL-C.
             raise
@@ -844,9 +872,11 @@ class BaseFolder:
                 raise  # Bubble severe errors up.
             self.ui.error(e, exc_info()[2])
         except Exception as e:
-            self.ui.error(e, exc_info()[2],
-                          msg="Copying message %s [acc: %s]" %
-                              (uid, self.accountname))
+            self.ui.error(
+                e,
+                exc_info()[2],
+                msg="Copying message %s [acc: %s]" % (uid, self.accountname),
+            )
             raise  # Raise on unknown errors, so we can fix those.
 
     def _extract_message_id(self, raw_msg_bytes):
@@ -864,17 +894,20 @@ class BaseFolder:
         the Message-ID was in proper RFC format or False if it contained
         defects.
         """
-        msg_header = re.split(b'[\r]?\n[\r]?\n', raw_msg_bytes)[0]
+        msg_header = re.split(b"[\r]?\n[\r]?\n", raw_msg_bytes)[0]
         try:
-            msg_id = re.search(b"\nmessage-id:[\s]+(<[A-Za-z0-9!#$%&'*+-/=?^_`{}|~.@ ]+>)", 
-                msg_header, re.IGNORECASE).group(1)
+            msg_id = re.search(
+                b"\nmessage-id:[\s]+(<[A-Za-z0-9!#$%&'*+-/=?^_`{}|~.@ ]+>)",
+                msg_header,
+                re.IGNORECASE,
+            ).group(1)
         except AttributeError:
             # No match - Likely not following RFC rules.  Try and find anything
             # that looks like it could be the Message-ID but flag it.
-            _start_pos = msg_header.find(b'\nMessage-ID:')
+            _start_pos = msg_header.find(b"\nMessage-ID:")
             if _start_pos > 0:
-                _end_pos = msg_header.find(b'\n',_start_pos+15)
-                msg_id = msg_header[_start_pos+12:_end_pos].strip()
+                _end_pos = msg_header.find(b"\n", _start_pos + 15)
+                msg_id = msg_header[_start_pos + 12 : _end_pos].strip()
                 return (msg_id, False)
             else:
                 return (b"<Unknown Message-ID>", False)
@@ -896,16 +929,18 @@ class BaseFolder:
         # We don't cap the length to 70 characters, because we are just trying to
         # soft fix this message to resolve the python library looking for properly
         # quoted boundaries.
-        try: boundary_field = \
-            re.search(b"content-type:.*(boundary=[\"]?[A-Za-z0-9'()+_,-./:=? ]+[\"]?)",
-              re.split(b'[\r]?\n[\r]?\n', raw_msg_bytes)[0],
-              (re.IGNORECASE|re.DOTALL)).group(1)
+        try:
+            boundary_field = re.search(
+                b'content-type:.*(boundary=["]?[A-Za-z0-9\'()+_,-./:=? ]+["]?)',
+                re.split(b"[\r]?\n[\r]?\n", raw_msg_bytes)[0],
+                (re.IGNORECASE | re.DOTALL),
+            ).group(1)
         except AttributeError:
             # No match
             return raw_msg_bytes
         # get the boundary field, and strip off any trailing ws (against RFC rules, leading ws is OK)
         # if it was already quoted, well then there was nothing to fix
-        boundary, value = boundary_field.split(b'=', 1)
+        boundary, value = boundary_field.split(b"=", 1)
         value = value.rstrip()
         # ord(b'"') == 34
         if value[0] == value[-1] == 34:
@@ -916,8 +951,8 @@ class BaseFolder:
             # boundary="ahahah  " as the email library will trim the ws for us
             return raw_msg_bytes
         else:
-            new_field = b''.join([boundary, b'="', value, b'"'])
-            return(raw_msg_bytes.replace(boundary_field, new_field, 1))
+            new_field = b"".join([boundary, b'="', value, b'"'])
+            return raw_msg_bytes.replace(boundary_field, new_field, 1)
 
     def __syncmessagesto_copy(self, dstfolder, statusfolder):
         """Pass1: Copy locally existing messages not on the other side.
@@ -937,8 +972,9 @@ class BaseFolder:
 
         threads = []
 
-        copylist = [uid for uid in self.getmessageuidlist()
-                    if not statusfolder.uidexists(uid)]
+        copylist = [
+            uid for uid in self.getmessageuidlist() if not statusfolder.uidexists(uid)
+        ]
         num_to_copy = len(copylist)
 
         # Honor 'copy_ignore_eval' configuration option.
@@ -949,8 +985,10 @@ class BaseFolder:
                     self.ui.ignorecopyingmessage(uid, self, dstfolder)
 
         if num_to_copy > 0 and self.repository.account.dryrun:
-            self.ui.info("[DRYRUN] Copy {} messages from {}[{}] to {}".format(
-                num_to_copy, self, self.repository, dstfolder.repository)
+            self.ui.info(
+                "[DRYRUN] Copy {} messages from {}[{}] to {}".format(
+                    num_to_copy, self, self.repository, dstfolder.repository
+                )
             )
             return
 
@@ -973,17 +1011,15 @@ class BaseFolder:
                     statusfolder.savemessage(uid, None, flags, rtime)
                     continue
 
-                self.ui.copyingmessage(uid, num + 1, num_to_copy, self,
-                                       dstfolder)
+                self.ui.copyingmessage(uid, num + 1, num_to_copy, self, dstfolder)
                 # Exceptions are caught in copymessageto().
                 if self.suggeststhreads():
                     self.waitforthread()
                     thread = threadutil.InstanceLimitedThread(
                         self.getinstancelimitnamespace(),
                         target=self.copymessageto,
-                        name="Copy message from %s:%s" % (self.repository,
-                                                          self),
-                        args=(uid, dstfolder, statusfolder)
+                        name="Copy message from %s:%s" % (self.repository, self),
+                        args=(uid, dstfolder, statusfolder),
                     )
                     thread.start()
                     threads.append(thread)
@@ -1009,10 +1045,13 @@ class BaseFolder:
         # The list of messages to delete. If sync of deletions is disabled we
         # still remove stale entries from statusfolder (neither in local nor
         # remote).
-        deletelist = [uid for uid in statusfolder.getmessageuidlist()
-                      if uid >= 0 and
-                      not self.uidexists(uid) and
-                      (self._sync_deletes or not dstfolder.uidexists(uid))]
+        deletelist = [
+            uid
+            for uid in statusfolder.getmessageuidlist()
+            if uid >= 0
+            and not self.uidexists(uid)
+            and (self._sync_deletes or not dstfolder.uidexists(uid))
+        ]
 
         if len(deletelist):
             # Delete in statusfolder first to play safe. In case of abort, we
@@ -1051,9 +1090,11 @@ class BaseFolder:
                 # skip them.
                 skipped_keywords = list(selfkeywords - knownkeywords)
                 selfkeywords &= knownkeywords
-                msg = "Unknown keywords skipped: %s\n" \
-                      "You may want to change your configuration to include " \
-                      "those\n" % skipped_keywords
+                msg = (
+                    "Unknown keywords skipped: %s\n"
+                    "You may want to change your configuration to include "
+                    "those\n" % skipped_keywords
+                )
                 self.ui.warn(msg)
 
             keywordletterset = set([keywordmap[keyw] for keyw in selfkeywords])

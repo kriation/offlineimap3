@@ -47,19 +47,20 @@ class CursesUtil:
         """Initialize the curses color pairs available."""
 
         # set special colors 'gray' and 'banner'
-        self.colormap['white'] = 0  # hardcoded by curses
+        self.colormap["white"] = 0  # hardcoded by curses
         curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLUE)
-        self.colormap['banner'] = 1  # color 'banner' for bannerwin
+        self.colormap["banner"] = 1  # color 'banner' for bannerwin
 
         bcol = curses.COLOR_BLACK
         colors = (  # name, color, bold?
-            ('black', curses.COLOR_BLACK, False),
-            ('blue', curses.COLOR_BLUE, False),
-            ('red', curses.COLOR_RED, False),
-            ('purple', curses.COLOR_MAGENTA, False),
-            ('cyan', curses.COLOR_CYAN, False),
-            ('green', curses.COLOR_GREEN, False),
-            ('orange', curses.COLOR_YELLOW, False))
+            ("black", curses.COLOR_BLACK, False),
+            ("blue", curses.COLOR_BLUE, False),
+            ("red", curses.COLOR_RED, False),
+            ("purple", curses.COLOR_MAGENTA, False),
+            ("cyan", curses.COLOR_CYAN, False),
+            ("green", curses.COLOR_GREEN, False),
+            ("orange", curses.COLOR_YELLOW, False),
+        )
         # set the rest of all colors starting at pair 2
         i = 1
         for name, fcol, bold in colors:
@@ -103,7 +104,7 @@ class CursesUtil:
         self.exec_locked(lockedstuff)
 
     def isactive(self):
-        return hasattr(self, 'stdscr')
+        return hasattr(self, "stdscr")
 
 
 class CursesAccountFrame:
@@ -121,7 +122,7 @@ class CursesAccountFrame:
         :param account: An Account() or None (for eg SyncrunnerThread)"""
 
         self.children = []
-        self.account = account if account else '*Control'
+        self.account = account if account else "*Control"
         self.ui = ui
         self.window = None
         # Curses window associated with this acc.
@@ -135,8 +136,8 @@ class CursesAccountFrame:
 
         secs tells us how long we are going to sleep."""
 
-        sleepstr = '%3d:%02d' % (secs // 60, secs % 60) if secs else 'active'
-        accstr = '%s: [%s] %12.12s: ' % (self.acc_num, sleepstr, self.account)
+        sleepstr = "%3d:%02d" % (secs // 60, secs % 60) if secs else "active"
+        accstr = "%s: [%s] %12.12s: " % (self.acc_num, sleepstr, self.account)
 
         def addstr():
             try:
@@ -190,8 +191,7 @@ class CursesAccountFrame:
         # skipsleep pref
         if isinstance(self.account, offlineimap.accounts.Account):
             self.ui.info("Requested synchronization for acc: %s" % self.account)
-            self.account.config.set('Account %s' % self.account.name,
-                                    'skipsleep', '1')
+            self.account.config.set("Account %s" % self.account.name, "skipsleep", "1")
 
 
 class CursesThreadFrame:
@@ -222,7 +222,7 @@ class CursesThreadFrame:
     def display(self):
         def locked_display():
             try:
-                self.window.addch(self.y, self.x, '@', self.curses_color)
+                self.window.addch(self.y, self.x, "@", self.curses_color)
             except curses.error:  # Occurs when the terminal is very small
                 pass
             self.window.refresh()
@@ -239,7 +239,7 @@ class CursesThreadFrame:
         self.display()
 
     def std_color(self):
-        self.setcolor('black')
+        self.setcolor("black")
 
 
 class InputHandler(ExitNotifyThread):
@@ -382,7 +382,7 @@ class Blinkenlights(UIBase, CursesUtil):
         if not sys.stdout.isatty() and sys.stdin.isatty():
             return False
         # No TERM specified?  Can't use curses.
-        if not os.environ.get('TERM', None):
+        if not os.environ.get("TERM", None):
             return False
         # Test if ncurses actually starts up fine. Only do so for
         # python>=2.6.6 as calling initscr() twice messing things up.
@@ -428,66 +428,66 @@ class Blinkenlights(UIBase, CursesUtil):
         self.inputhandler = InputHandler(self)
         self.inputhandler.set_char_hdlr(self.on_keypressed)
 
-        self.gettf().setcolor('red')
+        self.gettf().setcolor("red")
         self.info(offlineimap.banner)
 
     def acct(self, *args):
         """Output that we start syncing an account (and start counting)."""
 
-        self.gettf().setcolor('purple')
+        self.gettf().setcolor("purple")
         super(Blinkenlights, self).acct(*args)
 
     def connecting(self, *args):
-        self.gettf().setcolor('white')
+        self.gettf().setcolor("white")
         super(Blinkenlights, self).connecting(*args)
 
     def syncfolders(self, *args):
-        self.gettf().setcolor('blue')
+        self.gettf().setcolor("blue")
         super(Blinkenlights, self).syncfolders(*args)
 
     def syncingfolder(self, *args):
-        self.gettf().setcolor('cyan')
+        self.gettf().setcolor("cyan")
         super(Blinkenlights, self).syncingfolder(*args)
 
     def skippingfolder(self, *args):
-        self.gettf().setcolor('cyan')
+        self.gettf().setcolor("cyan")
         super(Blinkenlights, self).skippingfolder(*args)
 
     def loadmessagelist(self, *args):
-        self.gettf().setcolor('green')
+        self.gettf().setcolor("green")
         super(Blinkenlights, self).loadmessagelist(*args)
 
     def syncingmessages(self, *args):
-        self.gettf().setcolor('blue')
+        self.gettf().setcolor("blue")
         super(Blinkenlights, self).syncingmessages(*args)
 
     def ignorecopyingmessage(self, *args):
-        self.gettf().setcolor('red')
+        self.gettf().setcolor("red")
         super(Blinkenlights, self).ignorecopyingmessage(*args)
 
     def copyingmessage(self, *args):
-        self.gettf().setcolor('orange')
+        self.gettf().setcolor("orange")
         super(Blinkenlights, self).copyingmessage(*args)
 
     def deletingmessages(self, *args):
-        self.gettf().setcolor('red')
+        self.gettf().setcolor("red")
         super(Blinkenlights, self).deletingmessages(*args)
 
     def addingflags(self, *args):
-        self.gettf().setcolor('blue')
+        self.gettf().setcolor("blue")
         super(Blinkenlights, self).addingflags(*args)
 
     def deletingflags(self, *args):
-        self.gettf().setcolor('blue')
+        self.gettf().setcolor("blue")
         super(Blinkenlights, self).deletingflags(*args)
 
     def callhook(self, *args):
-        self.gettf().setcolor('white')
+        self.gettf().setcolor("white")
         super(Blinkenlights, self).callhook(*args)
 
     # Generic logging functions #
     def warn(self, msg, minor=0):
-        self.gettf().setcolor('red', curses.A_BOLD)
+        self.gettf().setcolor("red", curses.A_BOLD)
         super(Blinkenlights, self).warn(msg)
 
     def threadExited(self, thread):
@@ -495,7 +495,7 @@ class Blinkenlights(UIBase, CursesUtil):
         with self.tframe_lock:
             if thread in self.threadframes[acc]:
                 tf = self.threadframes[acc][thread]
-                tf.setcolor('black')
+                tf.setcolor("black")
                 self.availablethreadframes[acc].append(tf)
                 del self.threadframes[acc][thread]
         super(Blinkenlights, self).threadExited(thread)
@@ -533,7 +533,7 @@ class Blinkenlights(UIBase, CursesUtil):
 
         if key < 1 or key > 255:
             return
-        if chr(key) == 'q':
+        if chr(key) == "q":
             # Request to quit completely.
             self.warn("Requested shutdown via 'q'")
             offlineimap.accounts.Account.set_abort_event(self.config, 3)
@@ -548,14 +548,14 @@ class Blinkenlights(UIBase, CursesUtil):
         self.getaccountframe(self.hotkeys[index]).syncnow()
 
     def sleep(self, sleepsecs, account):
-        self.gettf().setcolor('red')
+        self.gettf().setcolor("red")
         self.info("Next sync in %d:%02d" % (sleepsecs / 60, sleepsecs % 60))
         return super(Blinkenlights, self).sleep(sleepsecs, account)
 
     def sleeping(self, sleepsecs, remainingsecs):
         if not sleepsecs:
             # reset color to default if we are done sleeping.
-            self.gettf().setcolor('white')
+            self.gettf().setcolor("white")
         accframe = self.getaccountframe(self.getthreadaccount())
         return accframe.sleeping(sleepsecs, remainingsecs)
 
@@ -576,8 +576,7 @@ class Blinkenlights(UIBase, CursesUtil):
         try:
             # s.gettf().setcolor('white')
             self.warn(" *** Input Required")
-            self.warn(" *** Please enter password for user '%s': " %
-                      username)
+            self.warn(" *** Please enter password for user '%s': " % username)
             self.logwin.refresh()
             password = self.logwin.getstr()
         finally:
@@ -586,7 +585,7 @@ class Blinkenlights(UIBase, CursesUtil):
 
         # We need a str password
         if isinstance(password, bytes):
-            return password.decode(encoding='utf-8')
+            return password.decode(encoding="utf-8")
         return password
 
     def setupwindows(self, resize=False):
@@ -630,15 +629,15 @@ class Blinkenlights(UIBase, CursesUtil):
         """Draw the top-line banner line."""
 
         if curses.has_colors():
-            color = curses.A_BOLD | self.curses_colorpair('banner')
+            color = curses.A_BOLD | self.curses_colorpair("banner")
         else:
             color = curses.A_REVERSE
         self.bannerwin.clear()  # Delete old content (eg before resizes)
-        self.bannerwin.bkgd(' ', color)  # Fill background with that color
-        string = "%s %s" % (offlineimap.__productname__,
-                            offlineimap.__version__)
-        spaces = " " * max(1, (self.width - len(offlineimap.__copyright__)
-                               - len(string) - 1))
+        self.bannerwin.bkgd(" ", color)  # Fill background with that color
+        string = "%s %s" % (offlineimap.__productname__, offlineimap.__version__)
+        spaces = " " * max(
+            1, (self.width - len(offlineimap.__copyright__) - len(string) - 1)
+        )
         string = "%s%s%s" % (string, spaces, offlineimap.__copyright__)
         self.bannerwin.addnstr(0, 0, string, self.width - 1, color)
         self.bannerwin.noutrefresh()
@@ -652,7 +651,7 @@ class Blinkenlights(UIBase, CursesUtil):
             color = curses.A_NORMAL
         self.logwin.move(0, 0)
         self.logwin.clear()
-        self.logwin.bkgd(' ', color)
+        self.logwin.bkgd(" ", color)
         self.logwin.noutrefresh()
 
     def getaccountframe(self, acc_name):

@@ -10,7 +10,7 @@ import traceback
 
 
 def dump(out):
-    """ Dumps current stack trace into I/O object 'out' """
+    """Dumps current stack trace into I/O object 'out'"""
     id2name = {}
     for th_en in threading.enumerate():
         id2name[th_en.ident] = th_en.name

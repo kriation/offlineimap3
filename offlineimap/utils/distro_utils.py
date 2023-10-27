@@ -16,23 +16,23 @@ except ImportError:
 # we will walk through the values and will return the first
 # one that corresponds to the existing file.
 __DEF_OS_LOCATIONS = {
-    'freebsd': ['/usr/local/share/certs/ca-root-nss.crt'],
-    'openbsd': ['/etc/ssl/cert.pem'],
-    'dragonfly': ['/etc/ssl/cert.pem'],
-    'darwin': [
+    "freebsd": ["/usr/local/share/certs/ca-root-nss.crt"],
+    "openbsd": ["/etc/ssl/cert.pem"],
+    "dragonfly": ["/etc/ssl/cert.pem"],
+    "darwin": [
         # MacPorts, port curl-ca-bundle
-        '/opt/local/share/curl/curl-ca-bundle.crt',
+        "/opt/local/share/curl/curl-ca-bundle.crt",
         # homebrew, package openssl
-        '/usr/local/etc/openssl/cert.pem',
+        "/usr/local/etc/openssl/cert.pem",
     ],
-    'linux-ubuntu': ['/etc/ssl/certs/ca-certificates.crt'],
-    'linux-debian': ['/etc/ssl/certs/ca-certificates.crt'],
-    'linux-gentoo': ['/etc/ssl/certs/ca-certificates.crt'],
-    'linux-fedora': ['/etc/pki/tls/certs/ca-bundle.crt'],
-    'linux-redhat': ['/etc/pki/tls/certs/ca-bundle.crt'],
-    'linux-suse': ['/etc/ssl/ca-bundle.pem'],
-    'linux-opensuse': ['/etc/ssl/ca-bundle.pem'],
-    'linux-arch': ['/etc/ssl/certs/ca-certificates.crt'],
+    "linux-ubuntu": ["/etc/ssl/certs/ca-certificates.crt"],
+    "linux-debian": ["/etc/ssl/certs/ca-certificates.crt"],
+    "linux-gentoo": ["/etc/ssl/certs/ca-certificates.crt"],
+    "linux-fedora": ["/etc/pki/tls/certs/ca-bundle.crt"],
+    "linux-redhat": ["/etc/pki/tls/certs/ca-bundle.crt"],
+    "linux-suse": ["/etc/ssl/ca-bundle.pem"],
+    "linux-opensuse": ["/etc/ssl/ca-bundle.pem"],
+    "linux-arch": ["/etc/ssl/certs/ca-certificates.crt"],
 }
 
 
@@ -49,11 +49,11 @@ def get_os_name():
     """
     os_name = platform.system().lower()
 
-    if os_name.startswith('linux'):
+    if os_name.startswith("linux"):
         distro_name = linux_distribution()[0]
         if distro_name:
             os_name = os_name + "-%s" % distro_name.split()[0].lower()
-        if os.path.exists('/etc/arch-release'):
+        if os.path.exists("/etc/arch-release"):
             os_name = "linux-arch"
 
     return os_name
@@ -91,8 +91,9 @@ def get_os_sslcertfile():
 
     for l_file in location:
         assert isinstance(l_file, str)
-        if os.path.exists(l_file) and (os.path.isfile(l_file) or
-                                       os.path.islink(l_file)):
+        if os.path.exists(l_file) and (
+            os.path.isfile(l_file) or os.path.islink(l_file)
+        ):
             return l_file
 
     return None

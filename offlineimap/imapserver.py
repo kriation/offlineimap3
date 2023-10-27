@@ -35,6 +35,7 @@ from offlineimap.ui import getglobalui
 
 try:
     import gssapi
+
     have_gss = True
 except ImportError:
     have_gss = False
@@ -60,16 +61,17 @@ class IMAPServer:
         self.preauth_tunnel = repos.getpreauthtunnel()
         self.transport_tunnel = repos.gettransporttunnel()
         if self.preauth_tunnel and self.transport_tunnel:
-            raise OfflineImapError('%s: ' % repos +
-                                   'you must enable precisely one '
-                                   'type of tunnel (preauth or transport), '
-                                   'not both', OfflineImapError.ERROR.REPO)
-        self.tunnel = \
-            self.preauth_tunnel if self.preauth_tunnel \
-                else self.transport_tunnel
+            raise OfflineImapError(
+                "%s: " % repos + "you must enable precisely one "
+                "type of tunnel (preauth or transport), "
+                "not both",
+                OfflineImapError.ERROR.REPO,
+            )
+        self.tunnel = (
+            self.preauth_tunnel if self.preauth_tunnel else self.transport_tunnel
+        )
 
-        self.username = \
-            None if self.preauth_tunnel else repos.getuser()
+        self.username = None if self.preauth_tunnel else repos.getuser()
         self.user_identity = repos.get_remote_identity()
         self.authmechs = repos.get_auth_mechanisms()
         self.password = None
@@ -84,7 +86,9 @@ class IMAPServer:
             self.af = socket.AF_INET
         else:
             self.af = socket.AF_UNSPEC
-        self.hostname = None if self.transport_tunnel or self.preauth_tunnel else repos.gethost()
+        self.hostname = (
+            None if self.transport_tunnel or self.preauth_tunnel else repos.gethost()
+        )
         self.port = repos.getport()
         if self.port is None:
             self.port = 993 if self.usessl else 143
@@ -99,11 +103,11 @@ class IMAPServer:
         self.sslversion = repos.getsslversion()
         self.starttls = repos.getstarttls()
 
-        if self.usessl \
-                and self.tlslevel != "tls_compat" \
-                and self.sslversion is None:
-            raise Exception("When 'tls_level' is not 'tls_compat' "
-                            "the 'ssl_version' must be set explicitly.")
+        if self.usessl and self.tlslevel != "tls_compat" and self.sslversion is None:
+            raise Exception(
+                "When 'tls_level' is not 'tls_compat' "
+                "the 'ssl_version' must be set explicitly."
+            )
 
         self.oauth2_refresh_token = repos.getoauth2_refresh_token()
         self.oauth2_access_token = repos.getoauth2_access_token()
@@ -128,7 +132,7 @@ class IMAPServer:
         # In order to support proxy connection, we have to override the
         # default socket instance with our own socksified socket instance.
         # We add this option to bypass the GFW in China.
-        self.proxied_socket = self._get_proxy('proxy', socket.socket)
+        self.proxied_socket = self._get_proxy("proxy", socket.socket)
 
         # Turns out that the GFW in China is no longer blocking imap.gmail.com
         # However accounts.google.com (for oauth2) definitey is.  Therefore
@@ -139,21 +143,21 @@ class IMAPServer:
         # If not set, is same as proxy option (compatible with current configs)
         # To use a proxied_socket but not an authproxied_socket
         # set authproxy = '' in config
-        self.authproxied_socket = self._get_proxy('authproxy',
-                                                  self.proxied_socket)
+        self.authproxied_socket = self._get_proxy("authproxy", self.proxied_socket)
 
     def _get_proxy(self, proxysection, dfltsocket):
-        _account_section = 'Account ' + self.repos.account.name
+        _account_section = "Account " + self.repos.account.name
         if not self.config.has_option(_account_section, proxysection):
             return dfltsocket
         proxy = self.config.get(_account_section, proxysection)
-        if proxy == '':
+        if proxy == "":
             # explicitly set no proxy (overrides default return of dfltsocket)
             return socket.socket
 
         # Powered by PySocks.
         try:
             import socks
+
             proxy_type, host, port = proxy.split(":")
             port = int(port)
             socks.setdefaultproxy(getattr(socks, proxy_type), host, port)
@@ -161,9 +165,11 @@ class IMAPServer:
         except ImportError:
             self.ui.warn("PySocks not installed, ignoring proxy option.")
         except (AttributeError, ValueError) as e:
-            self.ui.warn("Bad proxy option %s for account %s: %s "
-                         "Ignoring %s option." %
-                         (proxy, self.repos.account.name, e, proxysection))
+            self.ui.warn(
+                "Bad proxy option %s for account %s: %s "
+                "Ignoring %s option."
+                % (proxy, self.repos.account.name, e, proxysection)
+            )
         return dfltsocket
 
     def __getpassword(self):
@@ -176,78 +182,92 @@ class IMAPServer:
             return self.password  # non-failed preconfigured one
 
         # get 1) configured password first 2) fall back to asking via UI
-        self.password = self.repos.getpassword() or \
-                        self.ui.getpass(self.username, self.config, self.passworderror)
+        self.password = self.repos.getpassword() or self.ui.getpass(
+            self.username, self.config, self.passworderror
+        )
         self.passworderror = None
         return self.password
 
     def __md5handler(self, response):
         challenge = response.strip()
-        self.ui.debug('imap', '__md5handler: got challenge %s' % challenge)
+        self.ui.debug("imap", "__md5handler: got challenge %s" % challenge)
 
         passwd = self.__getpassword()
-        retval = self.username + ' ' +\
-                 hmac.new(bytes(passwd, encoding='utf-8'), challenge,
-                          digestmod=hashlib.md5).hexdigest()
-        self.ui.debug('imap', '__md5handler: returning %s' % retval)
+        retval = (
+            self.username
+            + " "
+            + hmac.new(
+                bytes(passwd, encoding="utf-8"), challenge, digestmod=hashlib.md5
+            ).hexdigest()
+        )
+        self.ui.debug("imap", "__md5handler: returning %s" % retval)
         return retval
 
     def __loginauth(self, imapobj):
-        """ Basic authentication via LOGIN command."""
+        """Basic authentication via LOGIN command."""
 
-        self.ui.debug('imap', 'Attempting IMAP LOGIN authentication')
+        self.ui.debug("imap", "Attempting IMAP LOGIN authentication")
         imapobj.login(self.username, self.__getpassword())
 
     def __plainhandler(self, response):
         """Implements SASL PLAIN authentication, RFC 4616,
-          http://tools.ietf.org/html/rfc4616"""
+        http://tools.ietf.org/html/rfc4616"""
 
         authc = self.username
         if not authc:
-            raise OfflineImapError("No username provided for '%s'"
-                                   % self.repos.getname(),
-                                   OfflineImapError.ERROR.REPO)
+            raise OfflineImapError(
+                "No username provided for '%s'" % self.repos.getname(),
+                OfflineImapError.ERROR.REPO,
+            )
 
         passwd = self.__getpassword()
-        authz = ''
-        NULL = '\x00'
+        authz = ""
+        NULL = "\x00"
         if self.user_identity is not None:
             authz = self.user_identity
 
         retval = NULL.join((authz, authc, passwd))
-        self.ui.debug('imap', '__plainhandler: returning %s %s '
-                      '(passwd hidden for log)' % (authz, authc))
+        self.ui.debug(
+            "imap",
+            "__plainhandler: returning %s %s "
+            "(passwd hidden for log)" % (authz, authc),
+        )
         return retval
 
     def __xoauth2handler(self, response):
         now = datetime.datetime.now()
-        if self.oauth2_access_token_expires_at \
-                and self.oauth2_access_token_expires_at < now:
+        if (
+            self.oauth2_access_token_expires_at
+            and self.oauth2_access_token_expires_at < now
+        ):
             self.oauth2_access_token = None
-            self.ui.debug('imap', 'xoauth2handler: oauth2_access_token expired')
+            self.ui.debug("imap", "xoauth2handler: oauth2_access_token expired")
 
         if self.oauth2_access_token is None:
             if self.oauth2_request_url is None:
-                raise OfflineImapError("No remote oauth2_request_url for "
-                                       "repository '%s' specified." %
-                                       self, OfflineImapError.ERROR.REPO)
+                raise OfflineImapError(
+                    "No remote oauth2_request_url for "
+                    "repository '%s' specified." % self,
+                    OfflineImapError.ERROR.REPO,
+                )
 
             # Generate new access token.
             params = {}
-            params['client_id'] = self.oauth2_client_id
-            params['client_secret'] = self.oauth2_client_secret
-            params['refresh_token'] = self.oauth2_refresh_token
-            params['grant_type'] = 'refresh_token'
+            params["client_id"] = self.oauth2_client_id
+            params["client_secret"] = self.oauth2_client_secret
+            params["refresh_token"] = self.oauth2_refresh_token
+            params["grant_type"] = "refresh_token"
 
-            self.ui.debug('imap', 'xoauth2handler: url "%s"' %
-                          self.oauth2_request_url)
-            self.ui.debug('imap', 'xoauth2handler: params "%s"' % params)
+            self.ui.debug("imap", 'xoauth2handler: url "%s"' % self.oauth2_request_url)
+            self.ui.debug("imap", 'xoauth2handler: params "%s"' % params)
 
             original_socket = socket.socket
             socket.socket = self.authproxied_socket
             try:
                 response = urllib.request.urlopen(
-                    self.oauth2_request_url, urllib.parse.urlencode(params).encode('utf-8')).read()
+                    self.oauth2_request_url,
+                    urllib.parse.urlencode(params).encode("utf-8"),
+                ).read()
             except Exception as e:
                 try:
                     msg = "%s (configuration is: %s)" % (e, str(params))
@@ -260,22 +280,28 @@ class IMAPServer:
                 socket.socket = original_socket
 
             resp = json.loads(response)
-            self.ui.debug('imap', 'xoauth2handler: response "%s"' % resp)
-            if 'error' in resp:
-                raise OfflineImapError("xoauth2handler got: %s" % resp,
-                                       OfflineImapError.ERROR.REPO)
-            self.oauth2_access_token = resp['access_token']
-            if 'expires_in' in resp:
+            self.ui.debug("imap", 'xoauth2handler: response "%s"' % resp)
+            if "error" in resp:
+                raise OfflineImapError(
+                    "xoauth2handler got: %s" % resp, OfflineImapError.ERROR.REPO
+                )
+            self.oauth2_access_token = resp["access_token"]
+            if "expires_in" in resp:
                 self.oauth2_access_token_expires_at = now + datetime.timedelta(
-                    seconds=resp['expires_in'] / 2
+                    seconds=resp["expires_in"] / 2
                 )
 
-        self.ui.debug('imap', 'xoauth2handler: access_token "%s expires %s"' % (
-            self.oauth2_access_token, self.oauth2_access_token_expires_at))
-        auth_string = 'user=%s\1auth=Bearer %s\1\1' % (
-            self.username, self.oauth2_access_token)
+        self.ui.debug(
+            "imap",
+            'xoauth2handler: access_token "%s expires %s"'
+            % (self.oauth2_access_token, self.oauth2_access_token_expires_at),
+        )
+        auth_string = "user=%s\1auth=Bearer %s\1\1" % (
+            self.username,
+            self.oauth2_access_token,
+        )
         # auth_string = base64.b64encode(auth_string)
-        self.ui.debug('imap', 'xoauth2handler: returning "%s"' % auth_string)
+        self.ui.debug("imap", 'xoauth2handler: returning "%s"' % auth_string)
         return auth_string
 
     # Perform the next step handling a GSSAPI connection.
@@ -285,10 +311,10 @@ class IMAPServer:
             token = None
         try:
             if not self.gss_vc:
-                name = gssapi.Name('imap@' + self.hostname,
-                                   gssapi.NameType.hostbased_service)
-                self.gss_vc = gssapi.SecurityContext(usage="initiate",
-                                                     name=name)
+                name = gssapi.Name(
+                    "imap@" + self.hostname, gssapi.NameType.hostbased_service
+                )
+                self.gss_vc = gssapi.SecurityContext(usage="initiate", name=name)
 
             if not self.gss_vc.complete:
                 response = self.gss_vc.step(token)
@@ -310,27 +336,28 @@ class IMAPServer:
             # This is a behavior we got from pykerberos.  First byte is one,
             # first four bytes are preserved (pykerberos calls this a length).
             # Any additional bytes are username.
-            reply = b'\x01' + response.message[1:4]
-            reply += bytes(self.username, 'utf-8')
+            reply = b"\x01" + response.message[1:4]
+            reply += bytes(self.username, "utf-8")
 
             response = self.gss_vc.wrap(reply, response.encrypted)
             return response.message if response.message else ""
         except gssapi.exceptions.GSSError as err:
             # GSSAPI errored out on us; respond with None to cancel the
             # authentication
-            self.ui.debug('imap', err.gen_message())
+            self.ui.debug("imap", err.gen_message())
             return None
 
     def __start_tls(self, imapobj):
-        if 'STARTTLS' in imapobj.capabilities and not self.usessl:
-            self.ui.debug('imap', 'Using STARTTLS connection')
+        if "STARTTLS" in imapobj.capabilities and not self.usessl:
+            self.ui.debug("imap", "Using STARTTLS connection")
             try:
                 imapobj.starttls()
             except imapobj.error as e:
-                raise OfflineImapError("Failed to start "
-                                       "TLS connection: %s" % str(e),
-                                       OfflineImapError.ERROR.REPO,
-                                       exc_info()[2])
+                raise OfflineImapError(
+                    "Failed to start " "TLS connection: %s" % str(e),
+                    OfflineImapError.ERROR.REPO,
+                    exc_info()[2],
+                )
 
     # All __authn_* procedures are helpers that do authentication.
     # They are class methods that take one parameter, IMAP object.
@@ -355,7 +382,7 @@ class IMAPServer:
 
         self.connectionlock.acquire()
         try:
-            imapobj.authenticate('GSSAPI', self.__gsshandler)
+            imapobj.authenticate("GSSAPI", self.__gsshandler)
             return True
         except imapobj.error:
             self.gssapi = False
@@ -364,28 +391,28 @@ class IMAPServer:
             self.connectionlock.release()
 
     def __authn_cram_md5(self, imapobj):
-        imapobj.authenticate('CRAM-MD5', self.__md5handler)
+        imapobj.authenticate("CRAM-MD5", self.__md5handler)
         return True
 
     def __authn_plain(self, imapobj):
-        imapobj.authenticate('PLAIN', self.__plainhandler)
+        imapobj.authenticate("PLAIN", self.__plainhandler)
         return True
 
     def __authn_xoauth2(self, imapobj):
-        if self.oauth2_refresh_token is None \
-                and self.oauth2_access_token is None:
+        if self.oauth2_refresh_token is None and self.oauth2_access_token is None:
             return False
 
-        imapobj.authenticate('XOAUTH2', self.__xoauth2handler)
+        imapobj.authenticate("XOAUTH2", self.__xoauth2handler)
         return True
 
     def __authn_login(self, imapobj):
         # Use LOGIN command, unless LOGINDISABLED is advertized
         # (per RFC 2595)
-        if 'LOGINDISABLED' in imapobj.capabilities:
-            raise OfflineImapError("IMAP LOGIN is "
-                                   "disabled by server.  Need to use SSL?",
-                                   OfflineImapError.ERROR.REPO)
+        if "LOGINDISABLED" in imapobj.capabilities:
+            raise OfflineImapError(
+                "IMAP LOGIN is " "disabled by server.  Need to use SSL?",
+                OfflineImapError.ERROR.REPO,
+            )
         else:
             self.__loginauth(imapobj)
             return True
@@ -422,8 +449,9 @@ class IMAPServer:
         # GSSAPI mustn't be tunneled over TLS.
         for m in self.authmechs:
             if m not in auth_methods:
-                raise Exception("Bad authentication method %s, "
-                                "please, file OfflineIMAP bug" % m)
+                raise Exception(
+                    "Bad authentication method %s, " "please, file OfflineIMAP bug" % m
+                )
 
             func, tryTLS, check_cap = auth_methods[m]
 
@@ -439,28 +467,32 @@ class IMAPServer:
                     continue
 
             tried_to_authn = True
-            self.ui.debug('imap', 'Attempting '
-                                  '%s authentication' % m)
+            self.ui.debug("imap", "Attempting " "%s authentication" % m)
             try:
                 if func(imapobj):
                     return
             except (imapobj.error, OfflineImapError) as e:
-                self.ui.warn('%s authentication failed: %s' % (m, e))
+                self.ui.warn("%s authentication failed: %s" % (m, e))
                 exc_stack.append((m, e))
 
         if len(exc_stack):
             msg = "\n\t".join([": ".join((x[0], str(x[1]))) for x in exc_stack])
-            raise OfflineImapError("All authentication types "
-                                   "failed:\n\t%s" % msg, OfflineImapError.ERROR.REPO)
+            raise OfflineImapError(
+                "All authentication types " "failed:\n\t%s" % msg,
+                OfflineImapError.ERROR.REPO,
+            )
 
         if not tried_to_authn:
-            methods = ", ".join([x[5:] for x in
-                                 [x for x in imapobj.capabilities if x[0:5] == "AUTH="]])
-            raise OfflineImapError("Repository %s: no supported "
-                                   "authentication mechanisms found; configured %s, "
-                                   "server advertises %s" % (self.repos,
-                                                             ", ".join(self.authmechs), methods),
-                                   OfflineImapError.ERROR.REPO)
+            methods = ", ".join(
+                [x[5:] for x in [x for x in imapobj.capabilities if x[0:5] == "AUTH="]]
+            )
+            raise OfflineImapError(
+                "Repository %s: no supported "
+                "authentication mechanisms found; configured %s, "
+                "server advertises %s"
+                % (self.repos, ", ".join(self.authmechs), methods),
+                OfflineImapError.ERROR.REPO,
+            )
 
     def __verifycert(self, cert, hostname):
         """Verify that cert (in socket.getpeercert() format) matches hostname.
@@ -470,36 +502,39 @@ class IMAPServer:
 
         errstr = "CA Cert verifying failed: "
         if not cert:
-            return '%s no certificate received' % errstr
+            return "%s no certificate received" % errstr
         dnsname = hostname.lower()
         certnames = []
 
         # cert expired?
-        notafter = cert.get('notAfter')
+        notafter = cert.get("notAfter")
         if notafter:
             if time.time() >= cert_time_to_seconds(notafter):
-                return '%s certificate expired %s' % (errstr, notafter)
+                return "%s certificate expired %s" % (errstr, notafter)
 
         # First read commonName
-        for s in cert.get('subject', []):
+        for s in cert.get("subject", []):
             key, value = s[0]
-            if key == 'commonName':
+            if key == "commonName":
                 certnames.append(value.lower())
         if len(certnames) == 0:
-            return '%s no commonName found in certificate' % errstr
+            return "%s no commonName found in certificate" % errstr
 
         # Then read subjectAltName
-        for key, value in cert.get('subjectAltName', []):
-            if key == 'DNS':
+        for key, value in cert.get("subjectAltName", []):
+            if key == "DNS":
                 certnames.append(value.lower())
 
         # And finally try to match hostname with one of these names
         for certname in certnames:
-            if (certname == dnsname or
-                    '.' in dnsname and certname == '*.' + dnsname.split('.', 1)[1]):
+            if (
+                certname == dnsname
+                or "." in dnsname
+                and certname == "*." + dnsname.split(".", 1)[1]
+            ):
                 return None
 
-        return '%s no matching domain name found in certificate' % errstr
+        return "%s no matching domain name found in certificate" % errstr
 
     def acquireconnection(self):
         """Fetches a connection from the pool, making sure to create a new one
@@ -513,7 +548,7 @@ class IMAPServer:
         imapobj = None
 
         imap_debug = 0
-        if 'imap' in self.ui.debuglist:
+        if "imap" in self.ui.debuglist:
             imap_debug = 5
 
         if len(self.availableconnections):  # One is available.
@@ -524,11 +559,11 @@ class IMAPServer:
                 tryobj = self.availableconnections[i]
                 if self.lastowner[tryobj] == curThread.ident:
                     imapobj = tryobj
-                    del (self.availableconnections[i])
+                    del self.availableconnections[i]
                     break
             if not imapobj:
                 imapobj = self.availableconnections[0]
-                del (self.availableconnections[0])
+                del self.availableconnections[0]
             self.assignedconnections.append(imapobj)
             self.lastowner[imapobj] = curThread.ident
             self.connectionlock.release()
@@ -543,8 +578,7 @@ class IMAPServer:
             while success is not True:
                 # Generate a new connection.
                 if self.tunnel:
-                    self.ui.connecting(
-                        self.repos.getname(), 'tunnel', self.tunnel)
+                    self.ui.connecting(self.repos.getname(), "tunnel", self.tunnel)
                     imapobj = imaplibutil.IMAP4_Tunnel(
                         self.tunnel,
                         timeout=socket.getdefaulttimeout(),
@@ -553,10 +587,12 @@ class IMAPServer:
                     )
                     success = True
                 elif self.usessl:
-                    self.ui.connecting(
-                        self.repos.getname(), self.hostname, self.port)
-                    self.ui.debug('imap', "%s: level '%s', version '%s'" %
-                                  (self.repos.getname(), self.tlslevel, self.sslversion))
+                    self.ui.connecting(self.repos.getname(), self.hostname, self.port)
+                    self.ui.debug(
+                        "imap",
+                        "%s: level '%s', version '%s'"
+                        % (self.repos.getname(), self.tlslevel, self.sslversion),
+                    )
                     imapobj = imaplibutil.WrappedIMAP4_SSL(
                         host=self.hostname,
                         port=self.port,
@@ -573,10 +609,10 @@ class IMAPServer:
                         af=self.af,
                     )
                 else:
-                    self.ui.connecting(
-                        self.repos.getname(), self.hostname, self.port)
+                    self.ui.connecting(self.repos.getname(), self.hostname, self.port)
                     imapobj = imaplibutil.WrappedIMAP4(
-                        self.hostname, self.port,
+                        self.hostname,
+                        self.port,
                         timeout=socket.getdefaulttimeout(),
                         use_socket=self.proxied_socket,
                         debug=imap_debug,
@@ -584,8 +620,10 @@ class IMAPServer:
                     )
 
                 # If 'ID' extension is used by the server, we should use it
-                if 'ID' in imapobj.capabilities:
-                    l_str = '("name" "OfflineIMAP" "version" "{}")'.format(offlineimap.__version__)
+                if "ID" in imapobj.capabilities:
+                    l_str = '("name" "OfflineIMAP" "version" "{}")'.format(
+                        offlineimap.__version__
+                    )
                     imapobj.id(l_str)
 
                 if not self.preauth_tunnel:
@@ -598,14 +636,14 @@ class IMAPServer:
                         raise
 
             # Enable compression
-            if self.repos.getconfboolean('usecompression', 0):
+            if self.repos.getconfboolean("usecompression", 0):
                 imapobj.enable_compression()
 
             # update capabilities after login, e.g. gmail serves different ones
             typ, dat = imapobj.capability()
             if dat != [None]:
                 # Get the capabilities and convert them to string from bytes
-                s_dat = [x.decode('utf-8') for x in dat[-1].upper().split()]
+                s_dat = [x.decode("utf-8") for x in dat[-1].upper().split()]
                 imapobj.capabilities = tuple(s_dat)
 
             if self.delim is None:
@@ -618,12 +656,13 @@ class IMAPServer:
                     # No Folders were returned. This occurs, e.g. if the
                     # 'reference' prefix does not exist on the mail
                     # server. Raise exception.
-                    err = "Server '%s' returned no folders in '%s'" % \
-                          (self.repos.getname(), self.reference)
+                    err = "Server '%s' returned no folders in '%s'" % (
+                        self.repos.getname(),
+                        self.reference,
+                    )
                     self.ui.warn(err)
                     raise Exception(err)
-                self.delim, self.root = \
-                    imaputil.imapsplit(listres[0])[1:]
+                self.delim, self.root = imaputil.imapsplit(listres[0])[1:]
                 self.delim = imaputil.dequote(self.delim)
                 self.root = imaputil.dequote(self.root)
 
@@ -642,33 +681,44 @@ class IMAPServer:
             if type(e) == gaierror:
                 # DNS related errors. Abort Repo sync
                 # TODO: special error msg for e.errno == 2 "Name or service not known"?
-                reason = "Could not resolve name '%s' for repository " \
-                         "'%s'. Make sure you have configured the ser" \
-                         "ver name correctly and that you are online." % \
-                         (self.hostname, self.repos)
+                reason = (
+                    "Could not resolve name '%s' for repository "
+                    "'%s'. Make sure you have configured the ser"
+                    "ver name correctly and that you are online."
+                    % (self.hostname, self.repos)
+                )
                 raise OfflineImapError(reason, severity, exc_info()[2])
 
             if isinstance(e, SSLError) and e.errno == errno.EPERM:
                 # SSL unknown protocol error
                 # happens e.g. when connecting via SSL to a non-SSL service
                 if self.port != 993:
-                    reason = "Could not connect via SSL to host '%s' and non-s" \
-                             "tandard ssl port %d configured. Make sure you connect" \
-                             " to the correct port. Got: %s" % (
-                                 self.hostname, self.port, e)
+                    reason = (
+                        "Could not connect via SSL to host '%s' and non-s"
+                        "tandard ssl port %d configured. Make sure you connect"
+                        " to the correct port. Got: %s" % (self.hostname, self.port, e)
+                    )
                 else:
-                    reason = "Unknown SSL protocol connecting to host '%s' for " \
-                             "repository '%s'. OpenSSL responded:\n%s" \
-                             % (self.hostname, self.repos, e)
+                    reason = (
+                        "Unknown SSL protocol connecting to host '%s' for "
+                        "repository '%s'. OpenSSL responded:\n%s"
+                        % (self.hostname, self.repos, e)
+                    )
                 raise OfflineImapError(reason, severity, exc_info()[2])
 
-            if isinstance(e, socket.error) and e.args and e.args[0] == errno.ECONNREFUSED:
+            if (
+                isinstance(e, socket.error)
+                and e.args
+                and e.args[0] == errno.ECONNREFUSED
+            ):
                 # "Connection refused", can be a non-existing port, or an unauthorized
                 # webproxy (open WLAN?)
-                reason = "Connection to host '%s:%d' for repository '%s' was " \
-                         "refused. Make sure you have the right host and port " \
-                         "configured and that you are actually able to access the " \
-                         "network." % (self.hostname, self.port, self.repos)
+                reason = (
+                    "Connection to host '%s:%d' for repository '%s' was "
+                    "refused. Make sure you have the right host and port "
+                    "configured and that you are actually able to access the "
+                    "network." % (self.hostname, self.port, self.repos)
+                )
                 raise OfflineImapError(reason, severity, exc_info()[2])
 
             # Could not acquire connection to the remote;
@@ -676,17 +726,21 @@ class IMAPServer:
             if str(e)[:24] == "can't open socket; error":
                 raise OfflineImapError(
                     "Could not connect to remote server '%s' "
-                    "for repository '%s'. Remote does not answer." % (self.hostname, self.repos),
+                    "for repository '%s'. Remote does not answer."
+                    % (self.hostname, self.repos),
                     OfflineImapError.ERROR.REPO,
-                    exc_info()[2])
+                    exc_info()[2],
+                )
             if e.args:
                 try:
-                    if e.args[0][:35] == 'IMAP4 protocol error: socket error:':
+                    if e.args[0][:35] == "IMAP4 protocol error: socket error:":
                         raise OfflineImapError(
                             "Could not connect to remote server '{}' "
                             "for repository '{}'. Connection Refused.".format(
-                                self.hostname, self.repos),
-                            OfflineImapError.ERROR.CRITICAL)
+                                self.hostname, self.repos
+                            ),
+                            OfflineImapError.ERROR.CRITICAL,
+                        )
                 except:
                     pass
 
@@ -732,17 +786,20 @@ class IMAPServer:
         is expected to be invoked in a separate thread, which should be join()'d
         after the event is set."""
 
-        self.ui.debug('imap', 'keepalive thread started')
+        self.ui.debug("imap", "keepalive thread started")
         while not event.isSet():
             self.connectionlock.acquire()
-            numconnections = len(self.assignedconnections) + \
-                             len(self.availableconnections)
+            numconnections = len(self.assignedconnections) + len(
+                self.availableconnections
+            )
             self.connectionlock.release()
 
             threads = []
             for i in range(numconnections):
-                self.ui.debug('imap', 'keepalive: processing connection %d of %d' %
-                              (i, numconnections))
+                self.ui.debug(
+                    "imap",
+                    "keepalive: processing connection %d of %d" % (i, numconnections),
+                )
                 if len(self.idlefolders) > i:
                     # IDLE thread
                     idler = IdleThread(self, self.idlefolders[i])
@@ -752,16 +809,16 @@ class IMAPServer:
                 idler.start()
                 threads.append(idler)
 
-            self.ui.debug('imap', 'keepalive: waiting for timeout')
+            self.ui.debug("imap", "keepalive: waiting for timeout")
             event.wait(timeout)
-            self.ui.debug('imap', 'keepalive: after wait')
+            self.ui.debug("imap", "keepalive: after wait")
 
             for idler in threads:
                 # Make sure all the commands have completed.
                 idler.stop()
                 idler.join()
-            self.ui.debug('imap', 'keepalive: all threads joined')
-        self.ui.debug('imap', 'keepalive: event is set; exiting')
+            self.ui.debug("imap", "keepalive: all threads joined")
+        self.ui.debug("imap", "keepalive: event is set; exiting")
         return
 
     def releaseconnection(self, connection, drop_conn=False):
@@ -821,8 +878,9 @@ class IdleThread:
         try:
             imapobj.noop()
         except imapobj.abort:
-            self.ui.warn('Attempting NOOP on dropped connection %s' %
-                         imapobj.identifier)
+            self.ui.warn(
+                "Attempting NOOP on dropped connection %s" % imapobj.identifier
+            )
             self.parent.releaseconnection(imapobj, True)
             imapobj = None
         finally:
@@ -836,10 +894,10 @@ class IdleThread:
         remoterepos = account.remoterepos
         remotefolder = remoterepos.getfolder(self.folder, decode=False)
 
-        hook = account.getconf('presynchook', '')
+        hook = account.getconf("presynchook", "")
         account.callhook(hook, "idle")
         offlineimap.accounts.syncfolder(account, remotefolder, quick=False)
-        hook = account.getconf('postsynchook', '')
+        hook = account.getconf("postsynchook", "")
         account.callhook(hook, "idle")
 
         ui = getglobalui()
@@ -869,8 +927,9 @@ class IdleThread:
                 # End IDLE mode with noop, imapobj can point to a dropped conn.
                 imapobj.noop()
             except imapobj.abort:
-                self.ui.warn('Attempting NOOP on dropped connection %s' %
-                             imapobj.identifier)
+                self.ui.warn(
+                    "Attempting NOOP on dropped connection %s" % imapobj.identifier
+                )
                 self.parent.releaseconnection(imapobj, True)
             else:
                 self.parent.releaseconnection(imapobj)
@@ -899,8 +958,10 @@ class IdleThread:
             if "IDLE" in imapobj.capabilities:
                 imapobj.idle(callback=callback)
             else:
-                self.ui.warn("IMAP IDLE not supported on server '%s'."
-                             "Sleep until next refresh cycle." % imapobj.identifier)
+                self.ui.warn(
+                    "IMAP IDLE not supported on server '%s'."
+                    "Sleep until next refresh cycle." % imapobj.identifier
+                )
                 noop(imapobj)  # XXX: why?
             self.stop_sig.wait()  # self.stop() or IDLE callback are invoked.
             noop(imapobj)

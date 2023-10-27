@@ -41,7 +41,7 @@ class TTYFormatter(logging.Formatter):
         # thread info.  Most look like 'Account sync foo' or 'Folder
         # sync foo'.
         t_name = record.threadName
-        if t_name == 'MainThread':
+        if t_name == "MainThread":
             return log_str  # main thread doesn't get things prepended
         if t_name != self._last_log_thread:
             self._last_log_thread = t_name
@@ -89,8 +89,9 @@ class TTYUI(UIBase):
 
     def mainException(self):
         if isinstance(sys.exc_info()[1], KeyboardInterrupt):
-            self.logger.warn("Timer interrupted at user request; program "
-                             "terminating.\n")
+            self.logger.warn(
+                "Timer interrupted at user request; program " "terminating.\n"
+            )
             self.terminate()
         else:
             UIBase.mainException(self)
@@ -107,7 +108,8 @@ class TTYUI(UIBase):
 
         if sleepsecs > 0:
             if remainingsecs // 60 != (remainingsecs - sleepsecs) // 60:
-                self.logger.info("Next refresh in %.1f minutes" % (
-                        remainingsecs / 60.0))
+                self.logger.info(
+                    "Next refresh in %.1f minutes" % (remainingsecs / 60.0)
+                )
             time.sleep(sleepsecs)
         return 0

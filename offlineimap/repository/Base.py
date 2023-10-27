@@ -28,6 +28,7 @@ class BaseRepository(CustomConfig.ConfigHelperMixin):
     """
     Base Class for Repository
     """
+
     def __init__(self, reposname, account):
         self.ui = getglobalui()
         self.account = account
@@ -35,16 +36,17 @@ class BaseRepository(CustomConfig.ConfigHelperMixin):
         self.name = reposname
         self.localeval = account.getlocaleval()
         self._accountname = self.account.getname()
-        self._readonly = self.getconfboolean('readonly', False)
-        self.uiddir = os.path.join(self.config.getmetadatadir(),
-                                   'Repository-' + self.name)
+        self._readonly = self.getconfboolean("readonly", False)
+        self.uiddir = os.path.join(
+            self.config.getmetadatadir(), "Repository-" + self.name
+        )
         if not os.path.exists(self.uiddir):
             os.mkdir(self.uiddir, 0o700)
-        self.mapdir = os.path.join(self.uiddir, 'UIDMapping')
+        self.mapdir = os.path.join(self.uiddir, "UIDMapping")
         if not os.path.exists(self.mapdir):
             os.mkdir(self.mapdir, 0o700)
         # FIXME: self.uiddir variable name is lying about itself.
-        self.uiddir = os.path.join(self.uiddir, 'FolderValidity')
+        self.uiddir = os.path.join(self.uiddir, "FolderValidity")
         if not os.path.exists(self.uiddir):
             os.mkdir(self.uiddir, 0o700)
 
@@ -53,18 +55,20 @@ class BaseRepository(CustomConfig.ConfigHelperMixin):
         self.folderincludes = []
         self.foldersort = None
         self.newmail_hook = None
-        if self.config.has_option(self.getsection(), 'nametrans'):
-            self.nametrans = self.localeval.eval(
-                self.getconf('nametrans'), {'re': re})
-        if self.config.has_option(self.getsection(), 'folderfilter'):
+        if self.config.has_option(self.getsection(), "nametrans"):
+            self.nametrans = self.localeval.eval(self.getconf("nametrans"), {"re": re})
+        if self.config.has_option(self.getsection(), "folderfilter"):
             self.folderfilter = self.localeval.eval(
-                self.getconf('folderfilter'), {'re': re})
-        if self.config.has_option(self.getsection(), 'folderincludes'):
+                self.getconf("folderfilter"), {"re": re}
+            )
+        if self.config.has_option(self.getsection(), "folderincludes"):
             self.folderincludes = self.localeval.eval(
-                self.getconf('folderincludes'), {'re': re})
-        if self.config.has_option(self.getsection(), 'foldersort'):
+                self.getconf("folderincludes"), {"re": re}
+            )
+        if self.config.has_option(self.getsection(), "foldersort"):
             self.foldersort = self.localeval.eval(
-                self.getconf('foldersort'), {'re': re})
+                self.getconf("foldersort"), {"re": re}
+            )
 
     def restore_atime(self):
         """Sets folders' atime back to their values after a sync
@@ -144,7 +148,7 @@ class BaseRepository(CustomConfig.ConfigHelperMixin):
 
     # Interface from CustomConfig.ConfigHelperMixin
     def getsection(self):
-        return 'Repository ' + self.name
+        return "Repository " + self.name
 
     # Interface from CustomConfig.ConfigHelperMixin
     def getconfig(self):
@@ -207,8 +211,7 @@ class BaseRepository(CustomConfig.ConfigHelperMixin):
         It is disabled by either setting the whole repository
         'readonly' or by using the 'createfolders' setting."""
 
-        return (not self._readonly) and self.getconfboolean('createfolders',
-                                                            True)
+        return (not self._readonly) and self.getconfboolean("createfolders", True)
 
     def makefolder(self, foldername):
         """
@@ -255,8 +258,7 @@ class BaseRepository(CustomConfig.ConfigHelperMixin):
         Configuring nametrans on BOTH repositories could lead to infinite folder
         creation cycles."""
 
-        if not self.should_create_folders()\
-                and not local_repo.should_create_folders():
+        if not self.should_create_folders() and not local_repo.should_create_folders():
             # Quick exit if no folder creation is enabled on either side.
             return None
 
@@ -277,20 +279,24 @@ class BaseRepository(CustomConfig.ConfigHelperMixin):
 
             # Apply remote nametrans and fix serparator.
             local_name = remote_folder.getvisiblename().replace(
-                remote_repo.getsep(), local_repo.getsep())
-            if remote_folder.sync_this \
-                    and local_name not in list(local_hash.keys()):
+                remote_repo.getsep(), local_repo.getsep()
+            )
+            if remote_folder.sync_this and local_name not in list(local_hash.keys()):
                 try:
                     local_repo.makefolder(local_name)
                     # Need to refresh list.
                     local_repo.forgetfolders()
                 except OfflineImapError as exc:
-                    self.ui.error(exc, exc_info()[2],
-                                  "Creating folder %s on repository %s" %
-                                  (local_name, local_repo))
+                    self.ui.error(
+                        exc,
+                        exc_info()[2],
+                        "Creating folder %s on repository %s"
+                        % (local_name, local_repo),
+                    )
                     raise
-                status_repo.makefolder(local_name.replace(
-                    local_repo.getsep(), status_repo.getsep()))
+                status_repo.makefolder(
+                    local_name.replace(local_repo.getsep(), status_repo.getsep())
+                )
 
         # Create new folders from local to remote.
         for local_name, local_folder in list(local_hash.items()):
@@ -300,16 +306,18 @@ class BaseRepository(CustomConfig.ConfigHelperMixin):
 
             # Apply reverse nametrans and fix serparator.
             remote_name = local_folder.getvisiblename().replace(
-                local_repo.getsep(), remote_repo.getsep())
-            if local_folder.sync_this \
-                    and remote_name not in list(remote_hash.keys()):
+                local_repo.getsep(), remote_repo.getsep()
+            )
+            if local_folder.sync_this and remote_name not in list(remote_hash.keys()):
                 # Would the remote filter out the new folder name? In this case
                 # don't create it.
                 if not remote_repo.should_sync_folder(remote_name):
-                    msg = "Not creating folder '%s' (repository '%s') " \
-                          "as it would be filtered out on that repository." % \
-                          (remote_name, self)
-                    self.ui.debug('', msg)
+                    msg = (
+                        "Not creating folder '%s' (repository '%s') "
+                        "as it would be filtered out on that repository."
+                        % (remote_name, self)
+                    )
+                    self.ui.debug("", msg)
                     continue
 
                 # nametrans sanity check! Does remote nametrans lead to the
@@ -324,24 +332,31 @@ class BaseRepository(CustomConfig.ConfigHelperMixin):
                 # Get IMAPFolder and see if the reverse nametrans works fine.
                 # TODO: getfolder() works only because we succeed in getting
                 # inexisting folders which I would like to change. Take care!
-                tmp_remotefolder = remote_repo.getfolder(remote_name,
-                                                         decode=False)
+                tmp_remotefolder = remote_repo.getfolder(remote_name, decode=False)
                 loop_name = tmp_remotefolder.getvisiblename().replace(
-                    remote_repo.getsep(), local_repo.getsep())
+                    remote_repo.getsep(), local_repo.getsep()
+                )
                 if local_name != loop_name:
-                    msg = "INFINITE FOLDER CREATION DETECTED! "\
-                          "Folder '%s' (repository '%s') would be created as " \
-                          "folder '%s' (repository '%s'). The latter " \
-                          "becomes '%s' in return, leading to infinite " \
-                          "folder creation cycles.\n "\
-                          "SOLUTION: 1) Do set your nametrans rules on both " \
-                          "repositories so they lead to identical names if " \
-                          "applied back and forth. " \
-                          "2) Use folderfilter settings on a repository to " \
-                          "prevent some folders from being created on the " \
-                          "other side." % \
-                          (local_folder.getname(), local_repo, remote_name,
-                           remote_repo, loop_name)
+                    msg = (
+                        "INFINITE FOLDER CREATION DETECTED! "
+                        "Folder '%s' (repository '%s') would be created as "
+                        "folder '%s' (repository '%s'). The latter "
+                        "becomes '%s' in return, leading to infinite "
+                        "folder creation cycles.\n "
+                        "SOLUTION: 1) Do set your nametrans rules on both "
+                        "repositories so they lead to identical names if "
+                        "applied back and forth. "
+                        "2) Use folderfilter settings on a repository to "
+                        "prevent some folders from being created on the "
+                        "other side."
+                        % (
+                            local_folder.getname(),
+                            local_repo,
+                            remote_name,
+                            remote_repo,
+                            loop_name,
+                        )
+                    )
                     raise OfflineImapError(msg, OfflineImapError.ERROR.REPO)
 
                 # End sanity check, actually create the folder.
@@ -350,12 +365,15 @@ class BaseRepository(CustomConfig.ConfigHelperMixin):
                     # Need to refresh list.
                     self.forgetfolders()
                 except OfflineImapError as exc:
-                    msg = "Creating folder %s on repository %s" % \
-                          (remote_name, remote_repo)
+                    msg = "Creating folder %s on repository %s" % (
+                        remote_name,
+                        remote_repo,
+                    )
                     self.ui.error(exc, exc_info()[2], msg)
                     raise
-                status_repo.makefolder(local_name.replace(
-                    local_repo.getsep(), status_repo.getsep()))
+                status_repo.makefolder(
+                    local_name.replace(local_repo.getsep(), status_repo.getsep())
+                )
 
         # Find deleted folders.
         # TODO: We don't delete folders right now.
@@ -369,7 +387,7 @@ class BaseRepository(CustomConfig.ConfigHelperMixin):
         for the threads to terminate."""
 
     def getlocalroot(self):
-        """ Local root folder for storing messages.
+        """Local root folder for storing messages.
         Will not be set for remote repositories."""
 
         return None

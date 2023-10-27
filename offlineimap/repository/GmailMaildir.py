@@ -26,5 +26,6 @@ class GmailMaildirRepository(MaildirRepository):
     """
     GMail Maildir Repository Class
     """
+
     def getfoldertype(self):
         return GmailMaildirFolder

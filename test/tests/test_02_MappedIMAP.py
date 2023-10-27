@@ -20,7 +20,7 @@ from test.OLItest import OLITestLib
 # Things need to be setup first, usually setup.py initializes everything.
 # but if e.g. called from command line, we take care of default values here:
 if not OLITestLib.cred_file:
-    OLITestLib(cred_file='./test/credentials.conf', cmd='./offlineimap.py')
+    OLITestLib(cred_file="./test/credentials.conf", cmd="./offlineimap.py")
 
 
 def setUpModule():
@@ -39,6 +39,7 @@ def tearDownModule():
 # self.assertRaises(TypeError, random.shuffle, (1,2,3))
 # self.assertTrue(element in self.seq)
 # self.assertFalse(element in self.seq)
+
 
 class TestBasicFunctions(unittest.TestCase):
     # @classmethod

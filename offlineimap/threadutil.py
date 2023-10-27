@@ -20,7 +20,7 @@ from queue import Queue, Empty
 import traceback
 from offlineimap.ui import getglobalui
 
-STOP_MONITOR = 'STOP_MONITOR'
+STOP_MONITOR = "STOP_MONITOR"
 
 
 # General utilities
@@ -103,10 +103,12 @@ def monitor():
                     raise SystemExit
                 ui.threadException(thread)  # Expected to terminate the program.
                 # Should never hit this line.
-                raise AssertionError("thread has 'exit_exception' set to"
-                                     " '%s' [%s] but this value is unexpected"
-                                     " and the ui did not stop the program." %
-                                     (repr(thread.exit_exception), type(thread.exit_exception)))
+                raise AssertionError(
+                    "thread has 'exit_exception' set to"
+                    " '%s' [%s] but this value is unexpected"
+                    " and the ui did not stop the program."
+                    % (repr(thread.exit_exception), type(thread.exit_exception))
+                )
 
             # Only the monitor thread has this exit message set.
             elif thread.exit_message == STOP_MONITOR:

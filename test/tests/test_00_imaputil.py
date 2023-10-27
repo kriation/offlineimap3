@@ -24,7 +24,7 @@ from offlineimap.ui import UI_LIST, setglobalui
 # Things need to be setup first, usually setup.py initializes everything.
 # but if e.g. called from command line, we take care of default values here:
 if not OLITestLib.cred_file:
-    OLITestLib(cred_file='./test/credentials.conf', cmd='./offlineimap.py')
+    OLITestLib(cred_file="./test/credentials.conf", cmd="./offlineimap.py")
 
 
 def setUpModule():
@@ -45,6 +45,7 @@ def tearDownModule():
 # self.assertTrue(element in self.seq)
 # self.assertFalse(element in self.seq)
 
+
 class TestInternalFunctions(unittest.TestCase):
     """While the other test files test OfflineImap as a program, these
     tests directly invoke internal helper functions to guarantee that
@@ -54,43 +55,43 @@ class TestInternalFunctions(unittest.TestCase):
     def setUpClass(cls):
         # This is run before all tests in this class
         config = OLITestLib.get_default_config()
-        setglobalui(UI_LIST['quiet'](config))
+        setglobalui(UI_LIST["quiet"](config))
 
     def test_01_imapsplit(self):
         """Test imaputil.imapsplit()"""
         res = imaputil.imapsplit('(\\HasNoChildren) "." "INBOX.Sent"')
-        self.assertEqual(res, ['(\\HasNoChildren)', '"."', '"INBOX.Sent"'])
+        self.assertEqual(res, ["(\\HasNoChildren)", '"."', '"INBOX.Sent"'])
 
         res = imaputil.imapsplit('"mo\\" o" sdfsdf')
-        self.assertEqual(res, ['"mo\\" o"', 'sdfsdf'])
+        self.assertEqual(res, ['"mo\\" o"', "sdfsdf"])
 
     def test_02_flagsplit(self):
         """Test imaputil.flagsplit()"""
-        res = imaputil.flagsplit('(\\Draft \\Deleted)')
-        self.assertEqual(res, ['\\Draft', '\\Deleted'])
+        res = imaputil.flagsplit("(\\Draft \\Deleted)")
+        self.assertEqual(res, ["\\Draft", "\\Deleted"])
 
-        res = imaputil.flagsplit('(FLAGS (\\Seen Old) UID 4807)')
-        self.assertEqual(res, ['FLAGS', '(\\Seen Old)', 'UID', '4807'])
+        res = imaputil.flagsplit("(FLAGS (\\Seen Old) UID 4807)")
+        self.assertEqual(res, ["FLAGS", "(\\Seen Old)", "UID", "4807"])
 
     def test_04_flags2hash(self):
         """Test imaputil.flags2hash()"""
-        res = imaputil.flags2hash('(FLAGS (\\Seen Old) UID 4807)')
-        self.assertEqual(res, {'FLAGS': '(\\Seen Old)', 'UID': '4807'})
+        res = imaputil.flags2hash("(FLAGS (\\Seen Old) UID 4807)")
+        self.assertEqual(res, {"FLAGS": "(\\Seen Old)", "UID": "4807"})
 
     def test_05_flagsimap2maildir(self):
         """Test imaputil.flagsimap2maildir()"""
-        res = imaputil.flagsimap2maildir('(\\Draft \\Deleted)')
-        self.assertEqual(res, set('DT'))
+        res = imaputil.flagsimap2maildir("(\\Draft \\Deleted)")
+        self.assertEqual(res, set("DT"))
 
     def test_06_flagsmaildir2imap(self):
         """Test imaputil.flagsmaildir2imap()"""
-        res = imaputil.flagsmaildir2imap(set('DR'))
-        self.assertEqual(res, '(\\Answered \\Draft)')
+        res = imaputil.flagsmaildir2imap(set("DR"))
+        self.assertEqual(res, "(\\Answered \\Draft)")
         # test all possible flags
-        res = imaputil.flagsmaildir2imap(set('SRFTD'))
-        self.assertEqual(res, '(\\Answered \\Deleted \\Draft \\Flagged \\Seen)')
+        res = imaputil.flagsmaildir2imap(set("SRFTD"))
+        self.assertEqual(res, "(\\Answered \\Deleted \\Draft \\Flagged \\Seen)")
 
     def test_07_uid_sequence(self):
         """Test imaputil.uid_sequence()"""
         res = imaputil.uid_sequence([1, 2, 3, 4, 5, 10, 12, 13])
-        self.assertEqual(res, '1:5,10,12:13')
+        self.assertEqual(res, "1:5,10,12:13")
