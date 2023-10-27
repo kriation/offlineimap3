@@ -530,13 +530,13 @@ class IMAPFolder(BaseFolder):
         # item is like:
         # ('185 (RFC822.HEADER {1789}', '... mail headers ...'), ' UID 2444)'
         for item in result:
-            if found is None and type(item) == tuple:
+            if found is None and isinstance(item, tuple):
                 # Decode the value
                 item = [x.decode("utf-8") for x in item]
 
                 # Walk just tuples.
                 if re.search(
-                    "(?:^|\\r|\\n)%s:\s*%s(?:\\r|\\n)" % (headername, headervalue),
+                    r"(?:^|\\r|\\n)%s:\s*%s(?:\\r|\\n)" % (headername, headervalue),
                     item[1],
                     flags=re.IGNORECASE,
                 ):
@@ -544,7 +544,7 @@ class IMAPFolder(BaseFolder):
             elif found is not None:
                 if isinstance(item, bytes):
                     item = item.decode("utf-8")
-                    uid = re.search("UID\s+(\d+)", item, flags=re.IGNORECASE)
+                    uid = re.search(r"UID\s+(\d+)", item, flags=re.IGNORECASE)
                     if uid:
                         return int(uid.group(1))
                     else:
@@ -555,7 +555,7 @@ class IMAPFolder(BaseFolder):
                         # and item[0] stored in "found" is like:
                         # '1694 (UID 1694 RFC822.HEADER {1294}'
                         uid = re.search(
-                            "\d+\s+\(UID\s+(\d+)", found, flags=re.IGNORECASE
+                            r"\d+\s+\(UID\s+(\d+)", found, flags=re.IGNORECASE
                         )
                         if uid:
                             return int(uid.group(1))
@@ -1142,7 +1142,7 @@ class IMAPFolder(BaseFolder):
         batch_size = 100
         for i in range(0, len(uidlist), batch_size):
             self.__processmessagesflags_real(
-                operation, uidlist[i : i + batch_size], flags
+                operation, uidlist[i: i + batch_size], flags
             )
         return
 

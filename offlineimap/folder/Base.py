@@ -264,7 +264,7 @@ class BaseFolder:
             basename = self.name.replace("/", ".")
         # Replace with literal 'dot' if final path name is '.' as '.' is
         # an invalid file name.
-        basename = re.sub("(^|\/)\.$", "\\1dot", basename)
+        basename = re.sub(r"(^|\/)\.$", "\\1dot", basename)
         return basename
 
     def check_uidvalidity(self):
@@ -751,7 +751,7 @@ class BaseFolder:
 
         """
 
-        if type(header_list) != type([]):
+        if not isinstance(header_list, list):
             header_list = [header_list]
         self.ui.debug("", "deletemessageheaders: called to delete %s" % header_list)
 
@@ -897,7 +897,7 @@ class BaseFolder:
         msg_header = re.split(b"[\r]?\n[\r]?\n", raw_msg_bytes)[0]
         try:
             msg_id = re.search(
-                b"\nmessage-id:[\s]+(<[A-Za-z0-9!#$%&'*+-/=?^_`{}|~.@ ]+>)",
+                rb"\nmessage-id:[\s]+(<[A-Za-z0-9!#$%&'*+-/=?^_`{}|~.@ ]+>)",
                 msg_header,
                 re.IGNORECASE,
             ).group(1)
@@ -907,7 +907,7 @@ class BaseFolder:
             _start_pos = msg_header.find(b"\nMessage-ID:")
             if _start_pos > 0:
                 _end_pos = msg_header.find(b"\n", _start_pos + 15)
-                msg_id = msg_header[_start_pos + 12 : _end_pos].strip()
+                msg_id = msg_header[_start_pos + 12: _end_pos].strip()
                 return (msg_id, False)
             else:
                 return (b"<Unknown Message-ID>", False)

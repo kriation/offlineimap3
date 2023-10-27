@@ -113,7 +113,7 @@ class CustomConfigParser(SafeConfigParser):
         For instance, for "Account Test", returns "Test"."""
 
         key = key + " "
-        return [x[len(key) :] for x in self.sections() if x.startswith(key)]
+        return [x[len(key):] for x in self.sections() if x.startswith(key)]
 
     def set_if_not_exists(self, section, option, value):
         """Set a value if it does not exist yet.

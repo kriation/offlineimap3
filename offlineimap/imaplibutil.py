@@ -29,12 +29,9 @@ from offlineimap.ui import getglobalui
 from imaplib2 import IMAP4, IMAP4_SSL, InternalDate
 
 try:
-    import portalocker
+    import fcntl
 except:
-    try:
-        import fcntl
-    except:
-        pass  # Ok if this fails, we can do without.
+    pass  # Ok if this fails, we can do without.
 
 
 class UsefulIMAPMixIn:
@@ -58,7 +55,7 @@ class UsefulIMAPMixIn:
             return
         try:
             result = super(UsefulIMAPMixIn, self).select(mailbox, readonly)
-        except self.readonly as e:
+        except self.readonly:
             # pass self.readonly to our callers
             raise
         except self.abort as e:
@@ -211,7 +208,7 @@ class WrappedIMAP4_SSL(UsefulIMAPMixIn, IMAP4_SSL):
             self.socket = kwargs["use_socket"]
             del kwargs["use_socket"]
         self._fingerprint = kwargs.get("fingerprint", None)
-        if type(self._fingerprint) != type([]):
+        if not isinstance(self._fingerprint, list):
             self._fingerprint = [self._fingerprint]
         if "fingerprint" in kwargs:
             del kwargs["fingerprint"]

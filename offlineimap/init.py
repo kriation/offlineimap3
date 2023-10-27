@@ -433,9 +433,9 @@ class OfflineImap:
 
         currentThreadId = threading.currentThread().ident
 
-        def unique_count(l):
+        def unique_count(alist):
             d = collections.defaultdict(lambda: 0)
-            for v in l:
+            for v in alist:
                 d[tuple(v)] += 1
             return list((k, v) for k, v in list(d.items()))
 
@@ -459,7 +459,7 @@ class OfflineImap:
                 msg = "%s Thread is at:\n%s\n"
             else:
                 msg = "%s Threads are at:\n%s\n"
-            self.ui.debug("thread", msg % (times, "\n".join(stack[-(context * 2) :])))
+            self.ui.debug("thread", msg % (times, "\n".join(stack[-(context * 2):])))
 
         self.ui.debug(
             "thread",

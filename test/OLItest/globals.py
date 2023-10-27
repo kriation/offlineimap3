@@ -19,7 +19,7 @@ from io import StringIO
 default_conf = StringIO(
     """[general]
 #will be set automatically
-metadata = 
+metadata =
 accounts = test
 ui = quiet
 
@@ -30,7 +30,7 @@ remoterepository = IMAP
 [Repository Maildir]
 Type = Maildir
 # will be set automatically during tests
-localfolders = 
+localfolders =
 
 [Repository IMAP]
 type=IMAP

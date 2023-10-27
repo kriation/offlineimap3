@@ -678,7 +678,7 @@ class IMAPServer:
             self.semaphore.release()
 
             severity = OfflineImapError.ERROR.REPO
-            if type(e) == gaierror:
+            if isinstance(e, gaierror):
                 # DNS related errors. Abort Repo sync
                 # TODO: special error msg for e.errno == 2 "Name or service not known"?
                 reason = (

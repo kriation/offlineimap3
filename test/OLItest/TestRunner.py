@@ -247,7 +247,7 @@ Content here."""
         return boxes, mails
 
     # find UID in a maildir filename
-    re_uidmatch = re.compile(",U=(\d+)")
+    re_uidmatch = re.compile(r",U=(\d+)")
 
     @classmethod
     def get_maildir_uids(cls, folder):

@@ -256,8 +256,8 @@ def __split_quoted(s):
         while i >= 0 and rest[i] == "\\":
             i -= 1
             is_escaped = not is_escaped
-        quoted += rest[0 : next_q + 1]
-        rest = rest[next_q + 1 :]
+        quoted += rest[0: next_q + 1]
+        rest = rest[next_q + 1:]
         if not is_escaped:
             return quoted, rest.lstrip()
 
@@ -300,7 +300,7 @@ def parse_labels_string(header, labels_str):
 
     labels = labels_str.strip().split(sep)
 
-    return set([l.strip() for l in labels if l.strip()])
+    return set([label.strip() for label in labels if label.strip()])
 
 
 def labels_from_header(header_name, header_value):

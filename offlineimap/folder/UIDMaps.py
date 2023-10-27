@@ -22,12 +22,9 @@ from sys import exc_info
 from threading import Lock
 
 try:
-    import portalocker
+    import fcntl
 except:
-    try:
-        import fcntl
-    except:
-        pass  # Ok if this fails, we can do without.
+    pass  # Ok if this fails, we can do without.
 
 from offlineimap import OfflineImapError
 from .IMAP import IMAPFolder
